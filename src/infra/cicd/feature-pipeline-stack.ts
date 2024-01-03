@@ -22,7 +22,7 @@ export class FeaturePipelineStack extends cdk.Stack {
         "BRANCH=$(echo $CODEBUILD_INITIATOR | sed -E 's/.*\/(feature-.*)-.*/\x01/')",
         "echo $feature_pipeline_suffix",
         "echo $BRANCH",
-        'npx projen',
+        "npm install projen",
         "cdk list -c branch_name=$BRANCH -c TargetStack=Pipeline",
         "cdk synth -c branch_name=$BRANCH -c TargetStack=Pipeline"
       ]
