@@ -1,13 +1,30 @@
 import { awscdk } from 'projen';
 const project = new awscdk.AwsCdkTypeScriptApp({
-  cdkVersion: '2.1.0',
-  defaultReleaseBranch: 'main',
   name: 'cdk-pipeline-feature-branch',
+  cdkVersion: '2.117.0',
+  cdkVersionPinning: true,
+  defaultReleaseBranch: 'main',
   projenrcTs: true,
+  requireApproval: awscdk.ApprovalLevel.NEVER,
+  constructsVersion: '10.2.55',
+  buildWorkflow: false,
+  release: false,
+  sampleCode: false,
+  context: {
+    "config": {
+      "githubOrg": "hosamshahin",
+      "githubRepo": "cdk-pipeline-feature-branch",
+      "githubBranch": "main",
+      "region": "us-east-1",
+      "connection_arn": "arn:aws:codestar-connections:us-east-1:690901106489:connection/947df6a7-dcd6-4c05-a53c-1173466436d3",
+      "accounts": {
+        "CICD_ACCOUNT_ID": "690901106489",
+        "DEV_ACCOUNT_ID": "864571753663",
+        "STG_ACCOUNT_ID": "787236266800",
+        "PRD_ACCOUNT_ID": "938711853848"
+      }
+    }
+  }
 
-  // deps: [],                /* Runtime dependencies of this module. */
-  // description: undefined,  /* The description is just a string that helps people understand the purpose of the package. */
-  // devDeps: [],             /* Build dependencies for this module. */
-  // packageName: undefined,  /* The "name" in package.json. */
 });
 project.synth();
