@@ -86,7 +86,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, `${id}-api-gateway-domain-arn`, {
-      value: `${githubWebhookApiGateway.arnForExecuteApi()}webhook`,
+      value: `${githubWebhookApiGateway.arnForExecuteApi()}`,
       exportName: `${id}-api-gateway-domain-arn`,
     });
 

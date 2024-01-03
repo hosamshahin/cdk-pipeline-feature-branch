@@ -33,7 +33,7 @@ export class Pipeline extends Construct {
       input,
       commands: [
         "npm install projen",
-        "npx cdk synth"
+        "npx cdk synth -c TargetStack=Pipeline"
       ],
     })
 
