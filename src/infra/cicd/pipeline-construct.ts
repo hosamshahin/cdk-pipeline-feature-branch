@@ -32,15 +32,13 @@ export class Pipeline extends Construct {
     const defultSynth: ShellStep = new ShellStep('Synth', {
       input,
       commands: [
-        'npm ci',
-        'npm run build',
+        'npx projen',
         'npx cdk synth'
       ],
     })
 
     let defaultCommands: Array<string> = [
-      'npm ci',
-      'npm run build',
+      'npx projen',
       'echo branch: $BRANCH',
       "npx cdk list -c branch_name=$BRANCH -c TargetStack=Pipeline",
       "npx cdk synth -c branch_name=$BRANCH -c TargetStack=Pipeline"
