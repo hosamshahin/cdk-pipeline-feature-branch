@@ -39,6 +39,15 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       }),
     );
 
+    handlerRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['sts:AssumeRole'],
+        resources: [
+          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/admin-role-from-cicd-account`
+        ],
+      }),
+    );
+
     // Create a lambda function that can act as a handler for API Gateway requests
     const githubHandler = new lambda.Function(this, 'githubWebhookApiHandler', {
       code: lambda.Code.fromAsset('./src/infra/lambdas/github_webhook_api'),
