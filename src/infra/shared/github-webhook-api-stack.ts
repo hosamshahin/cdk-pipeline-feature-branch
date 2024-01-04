@@ -99,6 +99,11 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       exportName: `${id}-api-gateway-domain-arn`,
     });
 
+    new cdk.CfnOutput(this, `${id}-webhook-url`, {
+      value: `https://${githubWebhookApiGateway.restApiId}.execute-api.us-east-1.amazonaws.com/prod/webhook`,
+      exportName: `${id}-webhook-url`,
+    });
+
     const lambdaIntegration = new apigateway.LambdaIntegration(githubHandler, {
       proxy: true,
     });
