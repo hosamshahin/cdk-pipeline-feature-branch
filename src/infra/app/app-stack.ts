@@ -76,7 +76,7 @@ export class AppStack extends cdk.Stack {
     });
 
     let lambdaApiHandlerPublic = new lambdaNodeJs.NodejsFunction(this, "ApiHandlerPublic", {
-      entry: require.resolve("./src/infra/lambdas/app/coffee-listing-api-public"),
+      entry: require.resolve("../lambdas/app/coffee-listing-api-public"),
       environment: {
         BUCKET_NAME: this.bucket.bucketName,
         BUCKER_UPLOAD_FOLDER_NAME: "uploads",
@@ -86,7 +86,7 @@ export class AppStack extends cdk.Stack {
     this.bucket.grantReadWrite(lambdaApiHandlerPublic);
 
     let lambdaApiHandlerPrivate = new lambdaNodeJs.NodejsFunction(this, "ApiHandlerPrivate", {
-      entry: require.resolve("./src/infra/lambdas/app/coffee-listing-api-private"),
+      entry: require.resolve("../lambdas/app/coffee-listing-api-private"),
       environment: {
         DYNAMODB_TABLE_LIKES_NAME: likesTable.tableName,
       }

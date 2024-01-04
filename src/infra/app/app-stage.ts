@@ -20,6 +20,5 @@ export class AppStage extends cdk.Stage {
     this.cfnOutBucketName = appStack.cfnOutBucketName;
     this.cfnOutDistributionId = appStack.cfnOutDistributionId;
     this.cfnOutApiLikesUrl = appStack.cfnOutApiLikesUrl;
-
   }
 }

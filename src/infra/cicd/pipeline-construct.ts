@@ -51,25 +51,24 @@ export class Pipeline extends Construct {
       pipelineStage.addPre(new ManualApprovalStep('approval'));
     }
 
-    pipeline.addStage(appStage, {
-      post: [
-        new ShellStep("DeployFrontEnd", {
-          envFromCfnOutputs: {
-            SNOWPACK_PUBLIC_CLOUDFRONT_URL: appStage.cfnOutCloudFrontUrl,
-            SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
-            BUCKET_NAME: appStage.cfnOutBucketName,
-            DISTRIBUTION_ID: appStage.cfnOutDistributionId,
-            SNOWPACK_PUBLIC_API_LIKES_URL: appStage.cfnOutApiLikesUrl
-          },
-          commands: [
-            "cd $CODEBUILD_SRC_DIR/src/client",
-            "npm ci",
-            "npm run build",
-            "aws s3 cp $CODEBUILD_SRC_DIR/src/client/src/build s3://$BUCKET_NAME/frontend --recursive",
-            `aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"`,
-          ],
-        }),
-      ],
-    });
+    pipelineStage.addPost(
+      new ShellStep("DeployFrontEnd", {
+        envFromCfnOutputs: {
+          SNOWPACK_PUBLIC_CLOUDFRONT_URL: appStage.cfnOutCloudFrontUrl,
+          SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
+          BUCKET_NAME: appStage.cfnOutBucketName,
+          DISTRIBUTION_ID: appStage.cfnOutDistributionId,
+          SNOWPACK_PUBLIC_API_LIKES_URL: appStage.cfnOutApiLikesUrl
+        },
+        commands: [
+          "cd $CODEBUILD_SRC_DIR/src/client",
+          "npm ci",
+          "npm run build",
+          "aws s3 cp $CODEBUILD_SRC_DIR/src/client/src/build s3://$BUCKET_NAME/frontend --recursive",
+          `aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"`,
+        ],
+      }),
+    )
+
   }
 }
