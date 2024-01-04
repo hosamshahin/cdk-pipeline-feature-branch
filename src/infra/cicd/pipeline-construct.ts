@@ -30,7 +30,7 @@ export class Pipeline extends Construct {
       input,
       commands: [
         "npm install projen",
-        "npx cdk synth -c TargetStack=Pipeline"
+        "npx cdk synth -c TargetStack=Pipeline",
       ],
     })
 
@@ -41,13 +41,35 @@ export class Pipeline extends Construct {
       synth: defultSynth
     });
 
-    const stage = new AppStage(this, 'AppStage', {
+    const appStage = new AppStage(this, 'AppStage', {
       env: { account: accounts[props.deploymentAcct], region: props.region }
     })
 
-    const pipelineStage = pipeline.addStage(stage);
+    const pipelineStage = pipeline.addStage(appStage);
+
     if (props.preApprovalRequired) {
       pipelineStage.addPre(new ManualApprovalStep('approval'));
     }
+
+    pipeline.addStage(appStage, {
+      post: [
+        new ShellStep("DeployFrontEnd", {
+          envFromCfnOutputs: {
+            SNOWPACK_PUBLIC_CLOUDFRONT_URL: appStage.cfnOutCloudFrontUrl,
+            SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
+            BUCKET_NAME: appStage.cfnOutBucketName,
+            DISTRIBUTION_ID: appStage.cfnOutDistributionId,
+            SNOWPACK_PUBLIC_API_LIKES_URL: appStage.cfnOutApiLikesUrl
+          },
+          commands: [
+            "cd $CODEBUILD_SRC_DIR/src/client",
+            "npm ci",
+            "npm run build",
+            "aws s3 cp $CODEBUILD_SRC_DIR/src/client/src/build s3://$BUCKET_NAME/frontend --recursive",
+            `aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"`,
+          ],
+        }),
+      ],
+    });
   }
 }
