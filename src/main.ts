@@ -14,7 +14,7 @@ const config = app.node.tryGetContext("config")
 
 const targetStack = app.node.tryGetContext('TargetStack');
 
-const pipeline = new cdk.Stack(app, 'Pipeline', {env});
+const pipeline = new cdk.Stack(app, 'Pipeline', { env });
 
 if (targetStack == 'Pipeline') {
   new Pipeline(pipeline, 'Prd', {
@@ -25,27 +25,25 @@ if (targetStack == 'Pipeline') {
     githubRepo: config.githubRepo,
     githubBranch: config.githubBranch,
     preApprovalRequired: true,
-    pipelineGenerator: false
   });
 
-  new Pipeline(pipeline, 'PGen', {
-    deploymentEnv: 'PGen',
+  new Pipeline(pipeline, 'cicd', {
+    deploymentEnv: 'cicd',
     deploymentAcct: 'DEV_ACCOUNT_ID',
     region: config.region,
     githubOrg: config.githubOrg,
     githubRepo: config.githubRepo,
-    githubBranch: config.githubBranch,
+    githubBranch: 'not_exist_branch_to_avoid_running',
     preApprovalRequired: false,
-    pipelineGenerator: true,
   });
 }
 
 if (targetStack == 'BootstrapAdminRole') {
-  new BootstrapAdminRole(app, 'BootstrapAdminRole', {env})
+  new BootstrapAdminRole(app, 'BootstrapAdminRole', { env })
 }
 
 if (targetStack == 'GithubWebhookAPIStack') {
-  new GithubWebhookAPIStack(app, 'GithubWebhookAPIStack', {env});
+  new GithubWebhookAPIStack(app, 'GithubWebhookAPIStack', { env });
 }
 
 app.synth();
