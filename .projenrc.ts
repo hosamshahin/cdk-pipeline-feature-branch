@@ -1,4 +1,4 @@
-import { awscdk } from 'projen';
+import { awscdk, javascript } from 'projen';
 const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'cdk-pipeline-feature-branch',
   cdkVersion: '2.117.0',
@@ -6,6 +6,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   defaultReleaseBranch: 'main',
   projenrcTs: true,
   requireApproval: awscdk.ApprovalLevel.NEVER,
+  packageManager: javascript.NodePackageManager.NPM,
   constructsVersion: '10.2.55',
   buildWorkflow: false,
   release: false,
