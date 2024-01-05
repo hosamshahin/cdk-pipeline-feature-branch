@@ -178,7 +178,7 @@ def handler(event, context):
 
             else:
                 ## delete pipeline on PR close
-                branch_name = ref_head
+                branch_name = ref_head or ref
                 if branch_name_check(branch_name, branch_prefix):
                     logger.info(f"Deleting branch name from parameter store: {branch_name}")
                     delete_branch_name_in_ssm(branch_name)
