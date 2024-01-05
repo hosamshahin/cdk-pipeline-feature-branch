@@ -1,7 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
+import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep, CodeBuildStep } from 'aws-cdk-lib/pipelines';
 import { AppStage } from '../app/app-stage';
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface PipelineProps {
   readonly deploymentEnv: string;
@@ -51,8 +52,27 @@ export class Pipeline extends Construct {
       pipelineStage.addPre(new ManualApprovalStep('approval'));
     }
 
+    // pipelineStage.addPost(
+    //   new ShellStep("DeployFrontEnd", {
+    //     envFromCfnOutputs: {
+    //       SNOWPACK_PUBLIC_CLOUDFRONT_URL: appStage.cfnOutCloudFrontUrl,
+    //       SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
+    //       BUCKET_NAME: appStage.cfnOutBucketName,
+    //       DISTRIBUTION_ID: appStage.cfnOutDistributionId,
+    //       SNOWPACK_PUBLIC_API_LIKES_URL: appStage.cfnOutApiLikesUrl
+    //     },
+    //     commands: [
+    //       "cd $CODEBUILD_SRC_DIR/src/client",
+    //       "npm ci",
+    //       "npm run build",
+    //       "aws s3 cp $CODEBUILD_SRC_DIR/src/client/src/build s3://$BUCKET_NAME/frontend --recursive",
+    //       `aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"`,
+    //     ],
+    //   }),
+    // )
+
     pipelineStage.addPost(
-      new ShellStep("DeployFrontEnd", {
+      new CodeBuildStep('DeployFrontEnd', {
         envFromCfnOutputs: {
           SNOWPACK_PUBLIC_CLOUDFRONT_URL: appStage.cfnOutCloudFrontUrl,
           SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
@@ -67,8 +87,15 @@ export class Pipeline extends Construct {
           "aws s3 cp $CODEBUILD_SRC_DIR/src/client/src/build s3://$BUCKET_NAME/frontend --recursive",
           `aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"`,
         ],
-      }),
-    )
-
+        rolePolicyStatements: [
+          new iam.PolicyStatement({
+            resources: [`${appStage.cfnOutBucketArn}`],
+            actions: [
+              's3:GetObject',
+              's3:PutObject',
+              's3:PutObjectAcl',
+            ],
+          })]
+      }))
   }
 }

@@ -13,6 +13,7 @@ export class AppStack extends cdk.Stack {
   public readonly distribution: cloudfront.Distribution;
   public readonly cfnOutCloudFrontUrl: cdk.CfnOutput;
   public readonly cfnOutBucketName: cdk.CfnOutput;
+  public readonly cfnOutBucketArn: cdk.CfnOutput;
   public readonly cfnOutDistributionId: cdk.CfnOutput;
   public readonly restApi: apigateway.LambdaRestApi;
   public readonly cfnOutApiImagesUrl: cdk.CfnOutput;
@@ -20,6 +21,9 @@ export class AppStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const config = this.node.tryGetContext("config")
+    const accounts = config['accounts']
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
     this.bucket = new s3.Bucket(this, "Bucket", {
@@ -33,6 +37,24 @@ export class AppStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true
     });
+
+    this.bucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          's3:GetObject',
+          's3:PutObject',
+          's3:PutObjectAcl',
+        ],
+        principals: [new iam.AnyPrincipal()],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalAccount': accounts['CICD_ACCOUNT_ID'],
+          },
+        },
+        effect: iam.Effect.ALLOW,
+        resources: [`${this.bucket.bucketArn}/*`],
+      })
+    )
 
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
@@ -64,6 +86,11 @@ export class AppStack extends cdk.Stack {
 
     this.cfnOutBucketName = new cdk.CfnOutput(this, "CfnOutBucketName", {
       value: this.bucket.bucketName,
+      description: "Website Hosting Bucket Name",
+    });
+
+    this.cfnOutBucketArn = new cdk.CfnOutput(this, "cfnOutBucketArn", {
+      value: this.bucket.bucketArn,
       description: "Website Hosting Bucket Name",
     });
 
