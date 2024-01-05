@@ -139,26 +139,22 @@ def delete_stack(branch_name, pipeline_template, dev_account):
 
 
 def handler(event, context):
-    raw_body_data = json.loads(event.get("body", {}))
-    print(raw_body_data)
-    logger.info(raw_body_data)
-    body = raw_body_data.get("data")
-    event = raw_body_data.get("event")
-    print("event")
-    print(body)
+    logger.info(json.dumps(event))
+    body = json.loads(event.get("body", {}))
+    headers = json.loads(event.get("headers", {}))
+    event_type = headers['X-GitHub-Event']
+    ref = body.get("ref", "")
+    ref_type = body.get("ref_type", "branch")
+    logger.info(f"ref: {ref}, ref_type: {ref_type}, event_type: {event_type}")
+
     msg = ""
     try:
-        # secret = get_github_webhook_secret_from_secretsmanager("github_webhook_secret")
-        ref = body.get("ref", "")
-        ref_head = body.get("ref_head", "")
-        ref_type = body.get("ref_type", "")
-        description = body.get("description", "")
-        logger.info(f"ref: {ref}, ref_type: {ref_type}, description: {description}")
-
         if ref_type == "branch":
             branch_name = ref
-            # create pipeline
-            if description:
+            # create pipeline and app
+            if event_type == 'push':
+                parts = ref.split("/")
+                branch_name = parts[-1]
                 if branch_name_check(branch_name, branch_prefix):
                     logger.info(f"Saving branch name to parameter store: {branch_name}")
                     save_branch_name_in_ssm(branch_name)
@@ -175,10 +171,9 @@ def handler(event, context):
                     msg = f"Done feature pipeline generation for: {branch_name}"
                 else:
                     msg = f"Branch name {branch_name} does not match the prefix {branch_prefix}"
-
-            else:
-                ## delete pipeline on PR close
-                branch_name = ref_head or ref
+            # delete pipeline and app
+            elif event_type == 'delete':
+                branch_name = ref
                 if branch_name_check(branch_name, branch_prefix):
                     logger.info(f"Deleting branch name from parameter store: {branch_name}")
                     delete_branch_name_in_ssm(branch_name)
