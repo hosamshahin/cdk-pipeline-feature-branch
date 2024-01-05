@@ -89,7 +89,7 @@ export class Pipeline extends Construct {
         ],
         rolePolicyStatements: [
           new iam.PolicyStatement({
-            resources: [`${appStage.cfnOutBucketArn}`],
+            resources: [`arn:aws:s3:::${appStage.cfnOutBucketName}/*`],
             actions: [
               's3:GetObject',
               's3:PutObject',
