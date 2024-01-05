@@ -76,7 +76,10 @@ export class Pipeline extends Construct {
       },
       rolePolicyStatements: [
         new iam.PolicyStatement({
-          resources: ['arn:aws:s3:::appstage-appstack-bucket*/*'],
+          resources: [
+            'arn:aws:s3:::appstage-appstack-bucket*/*',
+            'arn:aws:s3:::*appstage-appstack-bucket*/*'
+          ],
           actions: [
             's3:GetObject',
             's3:PutObject',
