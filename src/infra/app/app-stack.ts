@@ -159,6 +159,7 @@ export class AppStack extends cdk.Stack {
       value: restApi.urlForPath("/likes"),
       description: "Likes API URL for `frontend/.env` file",
     });
+
     this.cfnOutApiImagesUrl = new cdk.CfnOutput(this, "CfnOutApiImagesUrl", {
       value: restApi.urlForPath("/images"),
       description: "Images API URL for `frontend/.env` file",

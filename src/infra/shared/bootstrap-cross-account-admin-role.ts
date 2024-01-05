@@ -11,10 +11,15 @@ export class BootstrapAdminRole extends cdk.Stack {
 
     new iam.Role(this, 'admin-role-from-cicd-account', {
       roleName: 'admin-role-from-cicd-account',
-      assumedBy: new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/GithubWebhookAPIStack-lambda-role`),
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/GithubWebhookAPIStack-lambda-role`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/DeployFrontEndCodeBuildStepMainRole`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/DeployFrontEndCodeBuildStepFeatureRole`),
+      ),
       description: 'Role to grant access to target accounts',
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudFrontFullAccess'),
       ]
     });
   }
