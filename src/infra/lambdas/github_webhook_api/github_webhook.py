@@ -19,22 +19,17 @@ ssm_client = boto3.client("ssm")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def verify_signature(payload_body, secret_token, signature_header):
-    """Verify that the payload was sent from GitHub by validating SHA256.
 
-    Raise and return 403 if not authorized.
+def verify_signature(data, signature, github_secret):
+    # Create an HMAC object with the GitHub secret key using SHA-256
+    hmac_object = hmac.new(github_secret, data, hashlib.sha256)
 
-    Args:
-        payload_body: original request body to verify (request.body())
-        secret_token: GitHub app webhook token (WEBHOOK_SECRET)
-        signature_header: header received from GitHub (x-hub-signature-256)
-    """
-    if not signature_header:
-        raise Exception(status_code=403, detail="x-hub-signature-256 header is missing!")
-    hash_object = hmac.new(secret_token.encode('utf-8'), msg=payload_body, digestmod=hashlib.sha256)
-    expected_signature = "sha256=" + hash_object.hexdigest()
-    if not hmac.compare_digest(expected_signature, signature_header):
-        raise Exception(status_code=403, detail="Request signatures didn't match!")
+    # Calculate the signature
+    calculated_signature = "sha256=" + hmac_object.hexdigest()
+
+    # Compare the calculated signature with the received signature
+    return hmac.compare_digest(calculated_signature, signature)
+
 
 def get_github_webhook_secret_from_secretsmanager(github_webhook_secret):
     response = sm_client.get_secret_value(
@@ -158,18 +153,17 @@ def delete_stack(branch_name, pipeline_template, dev_account):
 
 def handler(event, context):
     logger.info(json.dumps(event))
-    body = event.get("body", {})
+    body = json.loads(event.get("body", {}))
     headers = event.get("headers", {})
     event_type = headers['X-GitHub-Event']
-    signature_header = headers['X-Hub-Signature-256']
+    signature = headers['X-Hub-Signature-256']
     ref = body.get("ref", "")
     ref_type = body.get("ref_type", "branch")
     logger.info(f"ref: {ref}, ref_type: {ref_type}, event_type: {event_type}")
-    verify_signature(body, github_secret, signature_header)
 
     msg = ""
     try:
-        if ref_type == "branch":
+        if ref_type == "branch" and verify_signature(body, signature, github_secret):
             branch_name = ref
             # create pipeline and app
             if event_type == 'push':
