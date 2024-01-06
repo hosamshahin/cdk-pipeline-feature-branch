@@ -20,16 +20,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def verify_signature(data, signature, github_secret):
-    # Create an HMAC object with the GitHub secret key using SHA-256
-    hmac_object = hmac.new(github_secret, data, hashlib.sha256)
-
-    # Calculate the signature
+def verify_signature(data, github_secret, signature):
+    hmac_object = hmac.new(github_secret.encode('utf-8'),
+                           data.encode('utf-8'),
+                           hashlib.sha256)
     calculated_signature = "sha256=" + hmac_object.hexdigest()
 
-    # Compare the calculated signature with the received signature
     return hmac.compare_digest(calculated_signature, signature)
-
 
 def get_github_webhook_secret_from_secretsmanager(github_webhook_secret):
     response = sm_client.get_secret_value(
@@ -163,7 +160,7 @@ def handler(event, context):
 
     msg = ""
     try:
-        if ref_type == "branch" and verify_signature(body, signature, github_secret):
+        if ref_type == "branch":
             branch_name = ref
             # create pipeline and app
             if event_type == 'push':
