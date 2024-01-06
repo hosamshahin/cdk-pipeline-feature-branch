@@ -10,6 +10,7 @@ branch_prefix = os.getenv("branchPrefix")
 feature_pipeline_suffix = os.getenv("featurePipelineSuffix")
 pipeline_template = os.getenv("pipelineTemplate")
 dev_account = os.getenv("devAccount")
+github_secret = os.getenv("githubSecretUUIDValue")
 
 codepipeline_client = boto3.client("codepipeline")
 sm_client = boto3.client("secretsmanager")
@@ -158,11 +159,13 @@ def delete_stack(branch_name, pipeline_template, dev_account):
 def handler(event, context):
     logger.info(json.dumps(event))
     body = event.get("body", {})
-    headers = json.loads(event.get("headers", {}))
+    headers = event.get("headers", {})
     event_type = headers['X-GitHub-Event']
+    signature_header = headers['X-Hub-Signature-256']
     ref = body.get("ref", "")
     ref_type = body.get("ref_type", "branch")
     logger.info(f"ref: {ref}, ref_type: {ref_type}, event_type: {event_type}")
+    verify_signature(body, github_secret, signature_header)
 
     msg = ""
     try:

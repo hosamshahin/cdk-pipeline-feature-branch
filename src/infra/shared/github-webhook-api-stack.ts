@@ -3,11 +3,20 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import { GenerateUUID } from './generate-uuid';
 import { Construct } from 'constructs';
 
 export class GithubWebhookAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const githubSecretUUID = new GenerateUUID(this, 'GithubSecretUUID').node.defaultChild as cdk.CustomResource;
+    const githubSecretUUIDValue = githubSecretUUID.getAtt('uuid').toString();
+
+    new cdk.CfnOutput(this, 'GithubSecretUUIDOutput', {
+      exportName: 'githubSecretUUIDValue',
+      value: githubSecretUUIDValue
+    });
 
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
@@ -58,7 +67,8 @@ export class GithubWebhookAPIStack extends cdk.Stack {
         pipelineTemplate: 'Pipeline-cicd',
         branchPrefix: '^(feature|bug|hotfix)-',
         featurePipelineSuffix: '-FeatureBranchPipeline',
-        devAccount: accounts['DEV_ACCOUNT_ID']
+        devAccount: accounts['DEV_ACCOUNT_ID'],
+        githubSecretUUIDValue
       },
       memorySize: 1024,
       timeout: cdk.Duration.minutes(1),
