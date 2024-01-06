@@ -13,7 +13,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
     const githubSecretUUID = new GenerateUUID(this, 'GithubSecretUUID').node.defaultChild as cdk.CustomResource;
     const githubSecretUUIDValue = githubSecretUUID.getAtt('uuid').toString();
 
-    new cdk.CfnOutput(this, 'GithubSecretUUIDOutput', {
+    new cdk.CfnOutput(this, 'secret-uuid', {
       exportName: 'githubSecretUUIDValue',
       value: githubSecretUUIDValue
     });
@@ -74,9 +74,9 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       timeout: cdk.Duration.minutes(1),
     });
 
-    new cdk.CfnOutput(this, `${id}-github-webhook-api-handler-lambda-arn`, {
+    new cdk.CfnOutput(this, `github-webhook-api-handler-lambda-arn`, {
       value: githubHandler.functionArn,
-      exportName: `${id}-github-webhook-api-handler-lambda-arn`,
+      exportName: `github-webhook-api-handler-lambda-arn`,
     });
 
     const logGroup = new logs.LogGroup(this, 'Github-Webhook-API-Logs');
@@ -104,14 +104,14 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       },
     });
 
-    new cdk.CfnOutput(this, `${id}-api-gateway-domain-arn`, {
+    new cdk.CfnOutput(this, `api-gateway-domain-arn`, {
       value: `${githubWebhookApiGateway.arnForExecuteApi()}`,
-      exportName: `${id}-api-gateway-domain-arn`,
+      exportName: `api-gateway-domain-arn`,
     });
 
-    new cdk.CfnOutput(this, `${id}-webhook-url`, {
+    new cdk.CfnOutput(this, `webhook-url`, {
       value: `https://${githubWebhookApiGateway.restApiId}.execute-api.us-east-1.amazonaws.com/prod/webhook`,
-      exportName: `${id}-webhook-url`,
+      exportName: `webhook-url`,
     });
 
     const lambdaIntegration = new apigateway.LambdaIntegration(githubHandler, {
