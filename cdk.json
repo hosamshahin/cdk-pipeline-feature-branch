@@ -6,17 +6,11 @@
       "githubRepo": "cdk-pipeline-feature-branch",
       "githubBranch": "main",
       "region": "us-east-1",
-      "connection_arn": "arn:aws:codestar-connections:us-east-1:690901106489:connection/947df6a7-dcd6-4c05-a53c-1173466436d3",
+      "connection_arn": "arn:aws:codestar-connections:us-east-1:645278470600:connection/90423367-38b7-4243-a0e7-db804bbc96fb",
       "accounts": {
         "CICD_ACCOUNT_ID": "645278470600",
         "DEV_ACCOUNT_ID": "447515469915",
         "PRD_ACCOUNT_ID": "742169474962"
-      },
-      "resourceAttr": {
-        "defaultDBName": "postgres",
-        "crossAccountLambdaRole": "crossAccountLambdaRole",
-        "schemaMigrationFnName": "RDSSchemaMigrationFunction",
-        "schemaMigrationCodeBuildStepRole": "schemaMigrationCodeBuildStepRole"
       }
     }
   },
