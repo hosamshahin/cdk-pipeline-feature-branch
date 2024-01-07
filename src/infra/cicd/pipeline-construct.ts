@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep, CodeBuildStep } from 'aws-cdk-lib/pipelines';
+import * as cpl from 'aws-cdk-lib/pipelines';
 import { AppStage } from '../app/app-stage';
 import * as iam from "aws-cdk-lib/aws-iam";
 
@@ -22,25 +22,23 @@ export class Pipeline extends Construct {
     const accounts = config['accounts']
     const connectionArn = config['connection_arn']
 
-    const input = CodePipelineSource.connection(
+    const input = cpl.CodePipelineSource.connection(
       `${props.githubOrg}/${props.githubRepo}`,
       props.githubBranch,
       { connectionArn }
     )
 
-    const defultSynth: ShellStep = new ShellStep('Synth', {
-      input,
-      commands: [
-        "npm install projen",
-        "npx cdk synth -c TargetStack=Pipeline",
-      ],
-    })
-
-    const pipeline = new CodePipeline(this, 'Pipeline', {
+    const pipeline = new cpl.CodePipeline(this, 'Pipeline', {
       crossAccountKeys: true,
       selfMutation: false,
       pipelineName: `Pipeline-${props.deploymentEnv}`,
-      synth: defultSynth
+      synth: new cpl.ShellStep('Synth', {
+        input,
+        commands: [
+          "npm install projen",
+          "npx cdk synth -c TargetStack=Pipeline",
+        ],
+      })
     });
 
     const appStage = new AppStage(this, 'AppStage', {
@@ -50,10 +48,10 @@ export class Pipeline extends Construct {
     const pipelineStage = pipeline.addStage(appStage);
 
     if (props.preApprovalRequired) {
-      pipelineStage.addPre(new ManualApprovalStep('approval'));
+      pipelineStage.addPre(new cpl.ManualApprovalStep('approval'));
     }
 
-    const codeBuildStep = new CodeBuildStep('DeployFrontEnd', {
+    const codeBuildStep = new cpl.CodeBuildStep('DeployFrontEnd', {
       envFromCfnOutputs: {
         SNOWPACK_PUBLIC_CLOUDFRONT_URL: appStage.cfnOutCloudFrontUrl,
         SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
