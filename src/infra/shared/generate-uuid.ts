@@ -33,7 +33,7 @@ class generateUUIDProvider extends Construct {
     super(scope, id);
 
     const onEvent = new lambda.Function(this, 'GenerateUUIDFunction', {
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambdas/utils')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/utils')),
       runtime: lambda.Runtime.PYTHON_3_8,
       handler: 'generate_uuid.on_event',
     });

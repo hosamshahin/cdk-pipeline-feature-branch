@@ -59,7 +59,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
 
     // Create a lambda function that can act as a handler for API Gateway requests
     const githubHandler = new lambda.Function(this, 'githubWebhookApiHandler', {
-      code: lambda.Code.fromAsset('./src/infra/lambdas/github_webhook_api'),
+      code: lambda.Code.fromAsset('./src/infra/lambda/github_webhook_api'),
       handler: 'github_webhook.handler',
       runtime: lambda.Runtime.PYTHON_3_9,
       role: handlerRole,

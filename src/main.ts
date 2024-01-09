@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { Pipeline } from './infra/cicd/pipeline-construct';
+import { Pipeline } from './infra/cicd/app-pipeline-construct';
+import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { BootstrapAdminRole } from './infra/shared/bootstrap-cross-account-admin-role';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
 
@@ -34,6 +35,18 @@ if (targetStack == 'Pipeline') {
     githubOrg: config.githubOrg,
     githubRepo: config.githubRepo,
     githubBranch: 'not_exist_branch_to_avoid_running',
+    preApprovalRequired: false,
+  });
+}
+
+if (targetStack == 'DBPipeline') {
+  new DBPipeline(pipeline, 'dev', {
+    deploymentEnv: 'dev',
+    deploymentAcct: 'DEV_ACCOUNT_ID',
+    region: config.region,
+    githubOrg: config.githubOrg,
+    githubRepo: config.githubRepo,
+    githubBranch: 'feature-dev',
     preApprovalRequired: false,
   });
 }
