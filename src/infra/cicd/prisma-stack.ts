@@ -147,8 +147,8 @@ export class PrismaFunction extends lambdanode.NodejsFunction {
             // the directory must be placed on the same directory as your Lambda code
             `cp -r ${i}/prisma ${o}`,
           ],
-          beforeBundling: (i, o) => [],
-          afterBundling: (i, o) => [],
+          beforeBundling: () => [],
+          afterBundling: () => [],
         },
       },
     });
