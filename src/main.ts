@@ -15,9 +15,8 @@ const config = app.node.tryGetContext("config")
 
 const targetStack = app.node.tryGetContext('TargetStack');
 
-const pipeline = new cdk.Stack(app, 'Pipeline', { env });
-
 if (targetStack == 'Pipeline') {
+  const pipeline = new cdk.Stack(app, 'Pipeline', { env });
   new Pipeline(pipeline, 'Prd', {
     deploymentEnv: 'prd',
     deploymentAcct: 'PRD_ACCOUNT_ID',
@@ -40,14 +39,15 @@ if (targetStack == 'Pipeline') {
 }
 
 if (targetStack == 'DBPipeline') {
-  new DBPipeline(pipeline, 'dev', {
-    deploymentEnv: 'dev',
-    deploymentAcct: 'DEV_ACCOUNT_ID',
+  const dbPipeline = new cdk.Stack(app, 'DBPipeline', { env });
+  new DBPipeline(dbPipeline, 'prd', {
+    deploymentEnv: 'prd',
+    deploymentAcct: 'PRD_ACCOUNT_ID',
     region: config.region,
     githubOrg: config.githubOrg,
     githubRepo: config.githubRepo,
-    githubBranch: 'feature-dev',
-    preApprovalRequired: false,
+    githubBranch: config.githubBranch,
+    preApprovalRequired: true,
   });
 }
 
