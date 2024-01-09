@@ -61,7 +61,7 @@ export class PrismaStack extends cdk.Stack {
     // Docker bundle
     const handler = new DockerPrismaFunction(this, "DockerHandler", {
       code: lambda.DockerImageCode.fromImageAsset(
-        require.resolve('../lambda/prisma'), {
+        './src/infra/lambda/prisma', {
         platform: Platform.LINUX_AMD64
       }),
       memorySize: 256,
@@ -73,7 +73,7 @@ export class PrismaStack extends cdk.Stack {
 
     this.migrationRunner = new DockerPrismaFunction(this, "DockerMigrationRunner", {
       code: lambda.DockerImageCode.fromImageAsset(
-        require.resolve('../lambda/prisma'), {
+        './src/infra/lambda/prisma', {
         cmd: ["migration-runner.handler"],
         platform: Platform.LINUX_AMD64,
       }),
