@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
 import { PrismaStage } from './prisma-stage';
 
-export interface PipelineProps {
+export interface DBPipelineProps {
   readonly deploymentEnv: string;
   readonly deploymentAcct: string;
   readonly region: string;
@@ -13,7 +13,7 @@ export interface PipelineProps {
 }
 
 export class DBPipeline extends Construct {
-  constructor(scope: Construct, id: string, props: PipelineProps) {
+  constructor(scope: Construct, id: string, props: DBPipelineProps) {
     super(scope, id);
 
     const config = this.node.tryGetContext("config")
@@ -36,7 +36,7 @@ export class DBPipeline extends Construct {
 
     const dbPipeline = new CodePipeline(this, 'DBPipeline', {
       crossAccountKeys: true,
-      selfMutation: false,
+      selfMutation: true,
       pipelineName: `DBPipeline-${props.deploymentEnv}`,
       synth: defultSynth
     });
