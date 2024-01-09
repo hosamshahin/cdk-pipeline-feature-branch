@@ -37,30 +37,31 @@ export class PrismaStack extends cdk.Stack {
 
     // Zip bundle
     new PrismaFunction(this, "Handler", {
-      entry: "../lambda/prisma/handler.ts",
+      entry: require.resolve('../lambda/prisma/handler.ts'),
       memorySize: 256,
       runtime: lambda.Runtime.NODEJS_20_X,
       timeout: cdk.Duration.seconds(15),
       vpc,
       securityGroups: [securityGroup],
       conn,
-      depsLockFilePath: "../lambda/prisma/package-lock.json",
+      depsLockFilePath: require.resolve('../lambda/prisma/package-lock.json'),
     });
 
     new PrismaFunction(this, "MigrationRunner", {
-      entry: "../lambda/prisma/migration-runner.ts",
+      entry: require.resolve('../lambda/prisma/migration-runner.ts'),
       memorySize: 256,
       runtime: lambda.Runtime.NODEJS_20_X,
       timeout: cdk.Duration.minutes(1),
       vpc,
       securityGroups: [securityGroup],
       conn,
-      depsLockFilePath: "../lambda/prisma/package-lock.json",
+      depsLockFilePath: require.resolve('../lambda/prisma/package-lock.json'),
     });
 
     // Docker bundle
     const handler = new DockerPrismaFunction(this, "DockerHandler", {
-      code: lambda.DockerImageCode.fromImageAsset("../lambda/prisma", {
+      code: lambda.DockerImageCode.fromImageAsset(
+        require.resolve('../lambda/prisma'), {
         platform: Platform.LINUX_AMD64
       }),
       memorySize: 256,
@@ -71,7 +72,8 @@ export class PrismaStack extends cdk.Stack {
     });
 
     this.migrationRunner = new DockerPrismaFunction(this, "DockerMigrationRunner", {
-      code: lambda.DockerImageCode.fromImageAsset("../lambda/prisma", {
+      code: lambda.DockerImageCode.fromImageAsset(
+        require.resolve('../lambda/prisma'), {
         cmd: ["migration-runner.handler"],
         platform: Platform.LINUX_AMD64,
       }),
