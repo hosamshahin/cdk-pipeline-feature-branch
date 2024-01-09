@@ -5,7 +5,7 @@ import * as lambdanode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Construct } from "constructs";
-// import { Trigger } from "aws-cdk-lib/triggers";
+import { Trigger } from "aws-cdk-lib/triggers";
 
 export class PrismaStack extends cdk.Stack {
   readonly database: rds.DatabaseInstance;
@@ -35,42 +35,6 @@ export class PrismaStack extends cdk.Stack {
       password: this.database.secret!.secretValueFromJson("password").toString(),
     }
 
-    // Zip bundle
-    new PrismaFunction(this, "Handler", {
-      entry: require.resolve('../lambda/prisma/handler.ts'),
-      memorySize: 256,
-      runtime: lambda.Runtime.NODEJS_20_X,
-      timeout: cdk.Duration.seconds(15),
-      vpc,
-      securityGroups: [securityGroup],
-      conn,
-      depsLockFilePath: require.resolve('../lambda/prisma/package-lock.json'),
-    });
-
-    new PrismaFunction(this, "MigrationRunner", {
-      entry: require.resolve('../lambda/prisma/migration-runner.ts'),
-      memorySize: 256,
-      runtime: lambda.Runtime.NODEJS_20_X,
-      timeout: cdk.Duration.minutes(1),
-      vpc,
-      securityGroups: [securityGroup],
-      conn,
-      depsLockFilePath: require.resolve('../lambda/prisma/package-lock.json'),
-    });
-
-    // Docker bundle
-    const handler = new DockerPrismaFunction(this, "DockerHandler", {
-      code: lambda.DockerImageCode.fromImageAsset(
-        './src/infra/lambda/prisma', {
-        platform: Platform.LINUX_AMD64
-      }),
-      memorySize: 256,
-      timeout: cdk.Duration.seconds(15),
-      vpc,
-      securityGroups: [securityGroup],
-      conn,
-    });
-
     this.migrationRunner = new DockerPrismaFunction(this, "DockerMigrationRunner", {
       code: lambda.DockerImageCode.fromImageAsset(
         './src/infra/lambda/prisma', {
@@ -84,16 +48,15 @@ export class PrismaStack extends cdk.Stack {
       conn,
     });
 
-    new cdk.CfnOutput(this, `HandlerLambdaArn`, { value: handler.functionArn });
     new cdk.CfnOutput(this, `MigrationRunnerLambdaArn`, { value: this.migrationRunner.functionArn });
 
     // run database migration during CDK deployment
-    // const trigger = new Trigger(this, "MigrationTrigger", {
-    //   handler: db.migrationRunner,
-    // });
+    const trigger = new Trigger(this, "MigrationTrigger", {
+      handler: this.migrationRunner,
+    });
 
     // make sure migration is executed after the database cluster is available.
-    // trigger.node.addDependency(db.database);
+    trigger.node.addDependency(this.database);
   }
 }
 
