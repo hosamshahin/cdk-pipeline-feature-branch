@@ -10,6 +10,8 @@ export class GithubWebhookAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+
+
     const githubSecretUUID = new GenerateUUID(this, 'GithubSecretUUID').node.defaultChild as cdk.CustomResource;
     const githubSecretUUIDValue = githubSecretUUID.getAtt('uuid').toString();
 
@@ -20,10 +22,13 @@ export class GithubWebhookAPIStack extends cdk.Stack {
 
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
+    const adminRoleFromCicdAccount = config['resourceAttr']['adminRoleFromCicdAccount']
+    const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
+
 
     const handlerRole = new iam.Role(this, 'generator-lambda-role', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      roleName: `${id}-lambda-role`,
+      roleName: webhookAPILambdaRole,
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
       ]
@@ -52,14 +57,14 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole'],
         resources: [
-          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/admin-role-from-cicd-account`
+          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/${adminRoleFromCicdAccount}`
         ],
       }),
     );
 
     // Create a lambda function that can act as a handler for API Gateway requests
     const githubHandler = new lambda.Function(this, 'githubWebhookApiHandler', {
-      code: lambda.Code.fromAsset('./src/infra/lambdas/github_webhook_api'),
+      code: lambda.Code.fromAsset('./src/infra/lambda/github_webhook_api'),
       handler: 'github_webhook.handler',
       runtime: lambda.Runtime.PYTHON_3_9,
       role: handlerRole,

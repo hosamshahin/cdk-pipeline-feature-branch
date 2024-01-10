@@ -11,6 +11,7 @@ feature_pipeline_suffix = os.getenv("featurePipelineSuffix")
 pipeline_template = os.getenv("pipelineTemplate")
 dev_account = os.getenv("devAccount")
 github_secret = os.getenv("githubSecretUUIDValue")
+adminRoleFromCicdAccount = os.getenv("adminRoleFromCicdAccount")
 
 codepipeline_client = boto3.client("codepipeline")
 sm_client = boto3.client("secretsmanager")
@@ -103,7 +104,7 @@ def delete_feature_pipeline(pipeline_name):
 
 
 def delete_stack(branch_name, pipeline_template, dev_account):
-    role_arn=f"arn:aws:iam::{dev_account}:role/admin-role-from-cicd-account"
+    role_arn=f"arn:aws:iam::{dev_account}:role/{adminRoleFromCicdAccount}"
     stack_name=''
 
     codepipeline_client = boto3.client("codepipeline")

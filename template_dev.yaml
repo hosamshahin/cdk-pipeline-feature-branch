@@ -1,0 +1,537 @@
+Resources:
+  Vpc8378EB38:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: PrismaStack/Vpc
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/Resource
+  VpcPublicSubnet1Subnet5C2D37C4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.0.0/18
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: PrismaStack/Vpc/PublicSubnet1
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet1/Subnet
+  VpcPublicSubnet1RouteTable6C95E38E:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: PrismaStack/Vpc/PublicSubnet1
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet1/RouteTable
+  VpcPublicSubnet1RouteTableAssociation97140677:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VpcPublicSubnet1RouteTable6C95E38E
+      SubnetId:
+        Ref: VpcPublicSubnet1Subnet5C2D37C4
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet1/RouteTableAssociation
+  VpcPublicSubnet1DefaultRoute3DA9E72A:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: VpcIGWD7BA715C
+      RouteTableId:
+        Ref: VpcPublicSubnet1RouteTable6C95E38E
+    DependsOn:
+      - VpcVPCGWBF912B6E
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet1/DefaultRoute
+  VpcPublicSubnet2Subnet691E08A3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.64.0/18
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: PrismaStack/Vpc/PublicSubnet2
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet2/Subnet
+  VpcPublicSubnet2RouteTable94F7E489:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: PrismaStack/Vpc/PublicSubnet2
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet2/RouteTable
+  VpcPublicSubnet2RouteTableAssociationDD5762D8:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VpcPublicSubnet2RouteTable94F7E489
+      SubnetId:
+        Ref: VpcPublicSubnet2Subnet691E08A3
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet2/RouteTableAssociation
+  VpcPublicSubnet2DefaultRoute97F91067:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: VpcIGWD7BA715C
+      RouteTableId:
+        Ref: VpcPublicSubnet2RouteTable94F7E489
+    DependsOn:
+      - VpcVPCGWBF912B6E
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/PublicSubnet2/DefaultRoute
+  VpcIsolatedSubnet1SubnetE48C5737:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.128.0/18
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Isolated
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: PrismaStack/Vpc/IsolatedSubnet1
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IsolatedSubnet1/Subnet
+  VpcIsolatedSubnet1RouteTable4771E3E5:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: PrismaStack/Vpc/IsolatedSubnet1
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IsolatedSubnet1/RouteTable
+  VpcIsolatedSubnet1RouteTableAssociationD300FCBB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VpcIsolatedSubnet1RouteTable4771E3E5
+      SubnetId:
+        Ref: VpcIsolatedSubnet1SubnetE48C5737
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IsolatedSubnet1/RouteTableAssociation
+  VpcIsolatedSubnet2Subnet16364B91:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.192.0/18
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Isolated
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: PrismaStack/Vpc/IsolatedSubnet2
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IsolatedSubnet2/Subnet
+  VpcIsolatedSubnet2RouteTable1D30AF7D:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: PrismaStack/Vpc/IsolatedSubnet2
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IsolatedSubnet2/RouteTable
+  VpcIsolatedSubnet2RouteTableAssociationF7B18CCA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VpcIsolatedSubnet2RouteTable1D30AF7D
+      SubnetId:
+        Ref: VpcIsolatedSubnet2Subnet16364B91
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IsolatedSubnet2/RouteTableAssociation
+  VpcIGWD7BA715C:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: PrismaStack/Vpc
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/IGW
+  VpcVPCGWBF912B6E:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId:
+        Ref: VpcIGWD7BA715C
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/Vpc/VPCGW
+  SecurityGroupDD263621:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PrismaStack/SecurityGroup
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/SecurityGroup/Resource
+  PostgresInstanceSubnetGroup84F90C7C:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for PostgresInstance database
+      SubnetIds:
+        - Ref: VpcPublicSubnet1Subnet5C2D37C4
+        - Ref: VpcPublicSubnet2Subnet691E08A3
+    Metadata:
+      aws:cdk:path: PrismaStack/PostgresInstance/SubnetGroup/Default
+  PostgresInstanceSecurityGroupCC8FD05A:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for PostgresInstance database
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      VpcId:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/PostgresInstance/SecurityGroup/Resource
+  PostgresInstanceSecurityGroupfromPrismaStackSecurityGroupFC09E6A6IndirectPort17A3246C:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: from PrismaStackSecurityGroupFC09E6A6:{IndirectPort}
+      FromPort:
+        Fn::GetAtt:
+          - PostgresInstance19CDD68A
+          - Endpoint.Port
+      GroupId:
+        Fn::GetAtt:
+          - PostgresInstanceSecurityGroupCC8FD05A
+          - GroupId
+      IpProtocol: tcp
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - SecurityGroupDD263621
+          - GroupId
+      ToPort:
+        Fn::GetAtt:
+          - PostgresInstance19CDD68A
+          - Endpoint.Port
+    Metadata:
+      aws:cdk:path: PrismaStack/PostgresInstance/SecurityGroup/from PrismaStackSecurityGroupFC09E6A6:{IndirectPort}
+  PostgresInstanceSecretD54AD1D0:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description:
+        Fn::Join:
+          - ""
+          - - "Generated by the CDK for stack: "
+            - Ref: AWS::StackName
+      GenerateSecretString:
+        ExcludeCharacters: " %+~`#$&*()|[]{}:;<>?!'/@\"\\"
+        GenerateStringKey: password
+        PasswordLength: 30
+        SecretStringTemplate: '{"username":"postgres"}'
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: PrismaStack/PostgresInstance/Secret/Resource
+  PostgresInstanceSecretAttachmentDFCC79DF:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId:
+        Ref: PostgresInstanceSecretD54AD1D0
+      TargetId:
+        Ref: PostgresInstance19CDD68A
+      TargetType: AWS::RDS::DBInstance
+    Metadata:
+      aws:cdk:path: PrismaStack/PostgresInstance/Secret/Attachment/Resource
+  PostgresInstance19CDD68A:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: "100"
+      CopyTagsToSnapshot: true
+      DBInstanceClass: db.t3.micro
+      DBSubnetGroupName:
+        Ref: PostgresInstanceSubnetGroup84F90C7C
+      Engine: postgres
+      MasterUserPassword:
+        Fn::Join:
+          - ""
+          - - "{{resolve:secretsmanager:"
+            - Ref: PostgresInstanceSecretD54AD1D0
+            - :SecretString:password::}}
+      MasterUsername:
+        Fn::Join:
+          - ""
+          - - "{{resolve:secretsmanager:"
+            - Ref: PostgresInstanceSecretD54AD1D0
+            - :SecretString:username::}}
+      PubliclyAccessible: true
+      StorageType: gp2
+      VPCSecurityGroups:
+        - Fn::GetAtt:
+            - PostgresInstanceSecurityGroupCC8FD05A
+            - GroupId
+    UpdateReplacePolicy: Snapshot
+    DeletionPolicy: Snapshot
+    Metadata:
+      aws:cdk:path: PrismaStack/PostgresInstance/Resource
+  DockerMigrationRunnerServiceRoleDA40993A:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    DependsOn:
+      - VpcIsolatedSubnet1RouteTableAssociationD300FCBB
+      - VpcIsolatedSubnet2RouteTableAssociationF7B18CCA
+    Metadata:
+      aws:cdk:path: PrismaStack/DockerMigrationRunner/ServiceRole/Resource
+  DockerMigrationRunnerDE766983:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ImageUri:
+          Fn::Sub: 864571753663.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-864571753663-us-east-1:c899252ce83a86a624709414c2aa45352c66d52499397dc911dba03ea22d564f
+      Environment:
+        Variables:
+          DATABASE_ENGINE:
+            Fn::Join:
+              - ""
+              - - "{{resolve:secretsmanager:"
+                - Ref: PostgresInstanceSecretAttachmentDFCC79DF
+                - :SecretString:engine::}}
+          DATABASE_HOST:
+            Fn::GetAtt:
+              - PostgresInstance19CDD68A
+              - Endpoint.Address
+          DATABASE_PASSWORD:
+            Fn::Join:
+              - ""
+              - - "{{resolve:secretsmanager:"
+                - Ref: PostgresInstanceSecretAttachmentDFCC79DF
+                - :SecretString:password::}}
+          DATABASE_PORT:
+            Fn::GetAtt:
+              - PostgresInstance19CDD68A
+              - Endpoint.Port
+          DATABASE_USER:
+            Fn::Join:
+              - ""
+              - - "{{resolve:secretsmanager:"
+                - Ref: PostgresInstanceSecretAttachmentDFCC79DF
+                - :SecretString:username::}}
+      ImageConfig:
+        Command:
+          - migration-runner.handler
+      MemorySize: 256
+      PackageType: Image
+      Role:
+        Fn::GetAtt:
+          - DockerMigrationRunnerServiceRoleDA40993A
+          - Arn
+      Timeout: 60
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - SecurityGroupDD263621
+              - GroupId
+        SubnetIds:
+          - Ref: VpcIsolatedSubnet1SubnetE48C5737
+          - Ref: VpcIsolatedSubnet2Subnet16364B91
+    DependsOn:
+      - DockerMigrationRunnerServiceRoleDA40993A
+      - VpcIsolatedSubnet1RouteTableAssociationD300FCBB
+      - VpcIsolatedSubnet2RouteTableAssociationF7B18CCA
+    Metadata:
+      aws:cdk:path: PrismaStack/DockerMigrationRunner/Resource
+      aws:asset:path: asset.c899252ce83a86a624709414c2aa45352c66d52499397dc911dba03ea22d564f
+      aws:asset:dockerfile-path: Dockerfile
+      aws:asset:property: Code.ImageUri
+  DockerMigrationRunnerCurrentVersion3DAE61C26bba659082834f43c956bdd8ef582a82:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName:
+        Ref: DockerMigrationRunnerDE766983
+    DependsOn:
+      - VpcIsolatedSubnet1RouteTableAssociationD300FCBB
+      - VpcIsolatedSubnet2RouteTableAssociationF7B18CCA
+    Metadata:
+      aws:cdk:path: PrismaStack/DockerMigrationRunner/CurrentVersion/Resource
+  VpcIdSSM66E671B5:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /database/VpcId
+      Type: String
+      Value:
+        Ref: Vpc8378EB38
+    Metadata:
+      aws:cdk:path: PrismaStack/VpcIdSSM/Resource
+  SecurityGroupSSMB4A43A84:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /database/SecurityGroupId
+      Type: String
+      Value:
+        Fn::GetAtt:
+          - SecurityGroupDD263621
+          - GroupId
+    Metadata:
+      aws:cdk:path: PrismaStack/SecurityGroupSSM/Resource
+  MigrationTrigger:
+    Type: Custom::Trigger
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - AWSCDKTriggerCustomResourceProviderCustomResourceProviderHandler97BECD91
+          - Arn
+      HandlerArn:
+        Ref: DockerMigrationRunnerCurrentVersion3DAE61C26bba659082834f43c956bdd8ef582a82
+      InvocationType: RequestResponse
+      Timeout: "120000"
+      ExecuteOnHandlerChange: true
+    DependsOn:
+      - PostgresInstance19CDD68A
+      - PostgresInstanceSecretAttachmentDFCC79DF
+      - PostgresInstanceSecretD54AD1D0
+      - PostgresInstanceSecurityGroupfromPrismaStackSecurityGroupFC09E6A6IndirectPort17A3246C
+      - PostgresInstanceSecurityGroupCC8FD05A
+      - PostgresInstanceSubnetGroup84F90C7C
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: PrismaStack/MigrationTrigger/Default/Default
+  AWSCDKTriggerCustomResourceProviderCustomResourceProviderRoleE18FAF0A:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      ManagedPolicyArns:
+        - Fn::Sub: arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: Inline
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - Fn::Join:
+                      - ""
+                      - - Fn::GetAtt:
+                            - DockerMigrationRunnerDE766983
+                            - Arn
+                        - :*
+    Metadata:
+      aws:cdk:path: PrismaStack/AWSCDK.TriggerCustomResourceProviderCustomResourceProvider/Role
+  AWSCDKTriggerCustomResourceProviderCustomResourceProviderHandler97BECD91:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-864571753663-us-east-1
+        S3Key: ac4a1bd8c7c7879385a212db2c46b2cb8f9e23b91c993d826d478bff7dbc0af3.zip
+      Timeout: 900
+      MemorySize: 128
+      Handler: __entrypoint__.handler
+      Role:
+        Fn::GetAtt:
+          - AWSCDKTriggerCustomResourceProviderCustomResourceProviderRoleE18FAF0A
+          - Arn
+      Runtime: nodejs18.x
+    DependsOn:
+      - AWSCDKTriggerCustomResourceProviderCustomResourceProviderRoleE18FAF0A
+    Metadata:
+      aws:cdk:path: PrismaStack/AWSCDK.TriggerCustomResourceProviderCustomResourceProvider/Handler
+      aws:asset:path: asset.ac4a1bd8c7c7879385a212db2c46b2cb8f9e23b91c993d826d478bff7dbc0af3
+      aws:asset:property: Code
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/31STZPaMAz9Lb0bt2wP7ZWP6Q6nZgLDdUdx1NQLthlJZofJ5L9XJhBoDz1Jfnp6epb9Yufzb/bLJ/jgmWsPs6NvbL8VcAej0FuP7sX2+5Mzq19xX61MlZujd9vcRJSCPbI6ZcEdNEd84A9swZycB/EpTmRTkT+D4ENjEwVJ81dFP+ByG3o7LURt/Q4YxWzRZfJyeaWUT9dx/wU2sSNkHgy1bPs1CDTAuIksEB2acf7Uul4+A3e2CtJocr28dw6GrygHiNAh2X6cXIhj2AF1KE/OJ8K/lcEcITQtqL/kDkiboIo/cnT3lU35Holv2C0djIdg+zqNuy9xMDrlDZjVnX1SXBSk1GyNp8ReEl2Wej3DHMrDk49dBQQB9SWK2HQYBlMjp0y6sauK/pJO2YX0M8spi9HuTtfAdjcmZpVZUpjaircp/6tUUTr7FqlYGUxMLdp3/nyef7fzr/o739n7GeUoPqCtx/gHFfzaPLoCAAA=
+    Metadata:
+      aws:cdk:path: PrismaStack/CDKMetadata/Default
+Outputs:
+  MigrationRunnerLambdaArn:
+    Value:
+      Fn::GetAtt:
+        - DockerMigrationRunnerDE766983
+        - Arn
+  DatabaSecretOutput:
+    Value:
+      Ref: PostgresInstanceSecretAttachmentDFCC79DF
+    Export:
+      Name: databaseSecretArn
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+

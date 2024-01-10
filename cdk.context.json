@@ -1,0 +1,126 @@
+{
+  "ssm:account=938711853848:parameterName=/database/VpcId:region=us-east-1": "vpc-0dcf35c75d2cf799f",
+  "ssm:account=938711853848:parameterName=/database/SecurityGroupId:region=us-east-1": "sg-08173ab96f4ac5a8d",
+  "ssm:account=864571753663:parameterName=/database/VpcId:region=us-east-1": "vpc-05ea46c0779904c93",
+  "ssm:account=864571753663:parameterName=/database/SecurityGroupId:region=us-east-1": "sg-04246deb9a1c185e2",
+  "vpc-provider:account=938711853848:filter.vpc-id=vpc-0dcf35c75d2cf799f:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0dcf35c75d2cf799f",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "938711853848",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Isolated",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-0e9d100efda4a4364",
+            "cidr": "10.0.128.0/18",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0a96ec6d4d53ee816"
+          },
+          {
+            "subnetId": "subnet-0b7284559e2a6c6af",
+            "cidr": "10.0.192.0/18",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-0ca12c13c813e4709"
+          }
+        ]
+      },
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-02b830f3bb30cf88f",
+            "cidr": "10.0.0.0/18",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0f43dca06a58d238b"
+          },
+          {
+            "subnetId": "subnet-0e7f9c43f72cbb16d",
+            "cidr": "10.0.64.0/18",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-0a6a412a6fee8499e"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=938711853848:region=us-east-1:securityGroupId=sg-08173ab96f4ac5a8d": {
+    "securityGroupId": "sg-08173ab96f4ac5a8d",
+    "allowAllOutbound": false
+  },
+  "vpc-provider:account=864571753663:filter.vpc-id=vpc-05ea46c0779904c93:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-05ea46c0779904c93",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "864571753663",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Isolated",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-0c694926d0a130302",
+            "cidr": "10.0.128.0/18",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-02a095d913205427c"
+          },
+          {
+            "subnetId": "subnet-09ff7bb6c14d6f3d9",
+            "cidr": "10.0.192.0/18",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-0af2031afcf32bd39"
+          }
+        ]
+      },
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-07dc598734ece63a4",
+            "cidr": "10.0.0.0/18",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-06368861f7fec1df8"
+          },
+          {
+            "subnetId": "subnet-02fbf03361ed26dd1",
+            "cidr": "10.0.64.0/18",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-0619a9b2ae59a5e63"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=864571753663:region=us-east-1:securityGroupId=sg-04246deb9a1c185e2": {
+    "securityGroupId": "sg-04246deb9a1c185e2",
+    "allowAllOutbound": false
+  },
+  "availability-zones:account=864571753663:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ],
+  "availability-zones:account=938711853848:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ],
+  "availability-zones:account=690901106489:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ]
+}

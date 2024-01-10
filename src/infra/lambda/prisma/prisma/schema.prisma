@@ -1,0 +1,17 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // make cold start fast especially for large schema
+  // https://github.com/prisma/prisma/issues/18095
+  previewFeatures = ["jsonProtocol"]
+}
+
+model Request {
+  id           Int      @id @default(autoincrement())
+  awsRequestId String
+  createdAt    DateTime @default(now())
+}

@@ -22,6 +22,19 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         "CICD_ACCOUNT_ID": "645278470600",
         "DEV_ACCOUNT_ID": "447515469915",
         "PRD_ACCOUNT_ID": "742169474962"
+      },
+      "resourceAttr":{
+        "defaultDBName": "postgres",
+        "crossAccountLambdaRole": "crossAccountLambdaRole",
+        "schemaMigrationFnName": "RDSSchemaMigrationFunction",
+        "migrationRunnerSecurityGroupId": "/database/SecurityGroupId",
+        "migrationRunnerName": "migrationRunner",
+        "databaseSecretArn": "databaseSecretArn",
+        "databaseVpcId": "/database/VpcId",
+        "adminRoleFromCicdAccount": "adminRoleFromCicdAccount",
+        "webhookAPILambdaRole": "webhookAPILambdaRole",
+        "frontEndCodeBuildStepRole": "frontEndCodeBuildStepRole",
+        "dbPipelineBranch": "dbPipelineBranch"
       }
     }
   }

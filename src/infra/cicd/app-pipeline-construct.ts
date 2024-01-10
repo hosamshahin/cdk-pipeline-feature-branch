@@ -21,6 +21,8 @@ export class Pipeline extends Construct {
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
     const connectionArn = config['connection_arn']
+    const adminRoleFromCicdAccount = config['resourceAttr']['adminRoleFromCicdAccount']
+    const frontEndCodeBuildStepRole = config['resourceAttr']['frontEndCodeBuildStepRole']
 
     const input = cpl.CodePipelineSource.connection(
       `${props.githubOrg}/${props.githubRepo}`,
@@ -30,7 +32,7 @@ export class Pipeline extends Construct {
 
     const pipeline = new cpl.CodePipeline(this, 'Pipeline', {
       crossAccountKeys: true,
-      selfMutation: false,
+      selfMutation: true,
       pipelineName: `Pipeline-${props.deploymentEnv}`,
       synth: new cpl.ShellStep('Synth', {
         input,
@@ -57,21 +59,22 @@ export class Pipeline extends Construct {
         SNOWPACK_PUBLIC_API_IMAGES_URL: appStage.cfnOutApiImagesUrl,
         BUCKET_NAME: appStage.cfnOutBucketName,
         DISTRIBUTION_ID: appStage.cfnOutDistributionId,
-        SNOWPACK_PUBLIC_API_LIKES_URL: appStage.cfnOutApiLikesUrl
+        SNOWPACK_PUBLIC_API_LIKES_URL: appStage.cfnOutApiLikesUrl,
+      },
+      env: {
+        'BRANCH_NAME': input.sourceAttribute('BranchName'),
+        'DEV_ACCOUNT_ID': accounts['DEV_ACCOUNT_ID'],
+        'PRD_ACCOUNT_ID': accounts['PRD_ACCOUNT_ID'],
+        'REGION': config['region'],
+        adminRoleFromCicdAccount
       },
       commands: [
         "cd $CODEBUILD_SRC_DIR/src/client",
         "npm ci",
         "npm run build",
         "aws s3 cp $CODEBUILD_SRC_DIR/src/client/src/build s3://$BUCKET_NAME/frontend --recursive",
-        "if [ \"$BRANCH_NAME\" = \"main\" ]; then\n    role_arn=\"arn:aws:iam::$PRD_ACCOUNT_ID:role/admin-role-from-cicd-account\"\nelse\n    role_arn=\"arn:aws:iam::$DEV_ACCOUNT_ID:role/admin-role-from-cicd-account\"\nfi\nsession=\"AssumedRoleSession\"\ntarget_account_region=\"$REGION\"\noutput=$(aws sts assume-role \\\n  --role-arn \"$role_arn\" \\\n  --role-session-name \"$session\" \\\n  --duration-seconds 900 \\\n  --region \"$target_account_region\")\n\naccess_key_id=$(echo \"$output\" | jq -r '.Credentials.AccessKeyId')\nsecret_access_key=$(echo \"$output\" | jq -r '.Credentials.SecretAccessKey')\nsession_token=$(echo \"$output\" | jq -r '.Credentials.SessionToken')\n\nexport AWS_ACCESS_KEY_ID=\"$access_key_id\"\nexport AWS_SECRET_ACCESS_KEY=\"$secret_access_key\"\nexport AWS_SESSION_TOKEN=\"$session_token\"\n\naws cloudfront create-invalidation \\\n  --distribution-id \"$DISTRIBUTION_ID\" \\\n  --paths \"/*\"\n"
+        "if [ \"$BRANCH_NAME\" = \"main\" ]; then\n    role_arn=\"arn:aws:iam::$PRD_ACCOUNT_ID:role/$adminRoleFromCicdAccount\"\nelse\n    role_arn=\"arn:aws:iam::$DEV_ACCOUNT_ID:role/$adminRoleFromCicdAccount\"\nfi\nsession=\"AssumedRoleSession\"\ntarget_account_region=\"$REGION\"\noutput=$(aws sts assume-role \\\n  --role-arn \"$role_arn\" \\\n  --role-session-name \"$session\" \\\n  --duration-seconds 900 \\\n  --region \"$target_account_region\")\n\naccess_key_id=$(echo \"$output\" | jq -r '.Credentials.AccessKeyId')\nsecret_access_key=$(echo \"$output\" | jq -r '.Credentials.SecretAccessKey')\nsession_token=$(echo \"$output\" | jq -r '.Credentials.SessionToken')\n\nexport AWS_ACCESS_KEY_ID=\"$access_key_id\"\nexport AWS_SECRET_ACCESS_KEY=\"$secret_access_key\"\nexport AWS_SESSION_TOKEN=\"$session_token\"\n\naws cloudfront create-invalidation \\\n  --distribution-id \"$DISTRIBUTION_ID\" \\\n  --paths \"/*\"\n"
       ],
-      env: {
-        'BRANCH_NAME': input.sourceAttribute('BranchName'),
-        'DEV_ACCOUNT_ID': accounts['DEV_ACCOUNT_ID'],
-        'PRD_ACCOUNT_ID': accounts['PRD_ACCOUNT_ID'],
-        'REGION': config['region'],
-      },
       rolePolicyStatements: [
         new iam.PolicyStatement({
           resources: [
@@ -87,8 +90,8 @@ export class Pipeline extends Construct {
         new iam.PolicyStatement({
           actions: ['sts:AssumeRole'],
           resources: [
-            `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/admin-role-from-cicd-account`,
-            `arn:aws:iam::${accounts['PRD_ACCOUNT_ID']}:role/admin-role-from-cicd-account`
+            `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/${adminRoleFromCicdAccount}`,
+            `arn:aws:iam::${accounts['PRD_ACCOUNT_ID']}:role/${adminRoleFromCicdAccount}`
           ],
         }),
       ]
@@ -98,15 +101,17 @@ export class Pipeline extends Construct {
     pipeline.buildPipeline();
 
     let cfnRole = (codeBuildStep.project.role as iam.Role).node.defaultChild as iam.CfnRole;
+
     let roleName: string = ''
 
     if (props.githubBranch == 'main') {
-      roleName = 'DeployFrontEndCodeBuildStepMainRole'
+      roleName = `${frontEndCodeBuildStepRole}-main`
     } else {
-      roleName = 'DeployFrontEndCodeBuildStepFeatureRole'
+      roleName = `${frontEndCodeBuildStepRole}`
     }
 
     cfnRole.addPropertyOverride('RoleName', roleName);
+
     new cdk.CfnOutput(this, roleName, {
       value: roleName,
       description: "Likes API URL for `frontend/.env` file",

@@ -7,6 +7,13 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
+import * as sm from 'aws-cdk-lib/aws-secretsmanager';
+import { Trigger } from "aws-cdk-lib/triggers";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct'
 
 export class AppStack extends cdk.Stack {
   public readonly bucket: s3.Bucket;
@@ -24,6 +31,10 @@ export class AppStack extends cdk.Stack {
 
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
+    const currentAcct = cdk.Stack.of(this).account
+    const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
+    let frontEndCodeBuildStepRole = config['resourceAttr']['frontEndCodeBuildStepRole']
+    frontEndCodeBuildStepRole = currentAcct == accounts['DEV_ACCOUNT_ID'] ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
     this.bucket = new s3.Bucket(this, "Bucket", {
@@ -103,7 +114,7 @@ export class AppStack extends cdk.Stack {
     });
 
     let lambdaApiHandlerPublic = new lambdaNodeJs.NodejsFunction(this, "ApiHandlerPublic", {
-      entry: require.resolve("../lambdas/app/coffee-listing-api-public"),
+      entry: require.resolve("../lambda/app/coffee-listing-api-public"),
       environment: {
         BUCKET_NAME: this.bucket.bucketName,
         BUCKER_UPLOAD_FOLDER_NAME: "uploads",
@@ -113,7 +124,7 @@ export class AppStack extends cdk.Stack {
     this.bucket.grantReadWrite(lambdaApiHandlerPublic);
 
     let lambdaApiHandlerPrivate = new lambdaNodeJs.NodejsFunction(this, "ApiHandlerPrivate", {
-      entry: require.resolve("../lambdas/app/coffee-listing-api-private"),
+      entry: require.resolve("../lambda/app/coffee-listing-api-private"),
       environment: {
         DYNAMODB_TABLE_LIKES_NAME: likesTable.tableName,
       }
@@ -148,6 +159,7 @@ export class AppStack extends cdk.Stack {
         allowMethods: apigateway.Cors.ALL_METHODS,
       },
     });
+
     apiLikes.addMethod("POST");
 
     let apiLikesImage = apiLikes.addResource("{imageKeyS3}");
@@ -164,5 +176,55 @@ export class AppStack extends cdk.Stack {
       value: restApi.urlForPath("/images"),
       description: "Images API URL for `frontend/.env` file",
     });
+
+    // CICD pipeline will assume this role to perform the follwoing actions
+    // 1- Delete app stack when feature branch is deleted
+    // 2- Push the client artifacts to dev/prod s3 bucket
+    // 3- invalidate CloudFront cache in dev/prod accounts
+    new iam.Role(this, 'adminRoleFromCicdAccount', {
+      roleName: config['resourceAttr']['adminRoleFromCicdAccount'],
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${webhookAPILambdaRole}`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${frontEndCodeBuildStepRole}`)
+      ),
+      description: 'Role to grant access to target accounts',
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudFrontFullAccess'),
+      ]
+    });
+
+    const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn']));
+    const vpcId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['databaseVpcId']);
+    const vpc = ec2.Vpc.fromLookup(this, "VPC", { vpcId });
+    const securityGroupId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['migrationRunnerSecurityGroupId']);
+    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId)
+
+    const conn: DatabaseConnectionProps = {
+      host: databaseSecret.secretValueFromJson("host").toString(),
+      port: databaseSecret.secretValueFromJson("port").toString(),
+      engine: databaseSecret.secretValueFromJson("engine").toString(),
+      username: databaseSecret.secretValueFromJson("username").toString(),
+      password: databaseSecret.secretValueFromJson("password").toString(),
+    }
+
+    const migrationRunner = new DockerPrismaFunction(this, "DockerMigrationRunner", {
+      code: lambda.DockerImageCode.fromImageAsset(
+        './src/infra/lambda/prisma', {
+        cmd: ["migration-runner.handler"],
+        platform: Platform.LINUX_AMD64,
+      }),
+      memorySize: 256,
+      timeout: cdk.Duration.minutes(1),
+      vpc,
+      securityGroups: [securityGroup],
+      conn
+    });
+
+    // run database migration during CDK deployment
+    new Trigger(this, "MigrationTrigger", {
+      handler: migrationRunner,
+    });
+
   }
 }
