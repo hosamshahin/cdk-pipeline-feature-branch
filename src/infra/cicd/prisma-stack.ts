@@ -51,18 +51,18 @@ export class PrismaStack extends cdk.Stack {
       value: migrationRunner.functionArn
     });
 
-    new cdk.CfnOutput(this, `databaSecretOutput`, {
+    new cdk.CfnOutput(this, `DatabaSecretOutput`, {
       value: database.secret!.secretArn,
       exportName: config['resourceAttr']['databaseSecretArn']
     });
 
     // create an SSM parameters which store export VPC ID
-    new ssm.StringParameter(this, 'VPCID', {
+    new ssm.StringParameter(this, 'VpcIdSSM', {
       parameterName: config['resourceAttr']['databaseVpcId'],
       stringValue: vpc.vpcId
     })
 
-    new ssm.StringParameter(this, 'VPCID', {
+    new ssm.StringParameter(this, 'SecurityGroupSSM', {
       parameterName: config['resourceAttr']['migrationRunnerSecurityGroupId'],
       stringValue: securityGroup.securityGroupId
     })
