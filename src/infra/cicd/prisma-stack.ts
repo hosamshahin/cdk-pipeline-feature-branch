@@ -51,11 +51,6 @@ export class PrismaStack extends cdk.Stack {
       value: migrationRunner.functionArn
     });
 
-    new cdk.CfnOutput(this, `securityGroupOutput`, {
-      value: securityGroup.securityGroupId,
-      exportName: config['resourceAttr']['migrationRunnerSecurityGroupId']
-    });
-
     new cdk.CfnOutput(this, `databaSecretOutput`, {
       value: database.secret!.secretArn,
       exportName: config['resourceAttr']['databaseSecretArn']
@@ -65,6 +60,11 @@ export class PrismaStack extends cdk.Stack {
     new ssm.StringParameter(this, 'VPCID', {
       parameterName: config['resourceAttr']['databaseVpcId'],
       stringValue: vpc.vpcId
+    })
+
+    new ssm.StringParameter(this, 'VPCID', {
+      parameterName: config['resourceAttr']['migrationRunnerSecurityGroupId'],
+      stringValue: securityGroup.securityGroupId
     })
 
     // run database migration during CDK deployment

@@ -28,7 +28,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         "defaultDBName": "postgres",
         "crossAccountLambdaRole": "crossAccountLambdaRole",
         "schemaMigrationFnName": "RDSSchemaMigrationFunction",
-        "migrationRunnerSecurityGroupId": "migrationRunnerSecurityGroupId",
+        "migrationRunnerSecurityGroupId": "/database/SecurityGroupId",
         "migrationRunnerName": "migrationRunner",
         "databaseSecretArn": "databaseSecretArn",
         "databaseVpcId": "/database/VpcId"
