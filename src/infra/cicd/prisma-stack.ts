@@ -57,15 +57,15 @@ export class PrismaStack extends cdk.Stack {
     });
 
     // create an SSM parameters which store export VPC ID
-    new ssm.StringParameter(this, 'VpcIdSSM', {
-      parameterName: config['resourceAttr']['databaseVpcId'],
-      stringValue: vpc.vpcId
-    })
+    // new ssm.StringParameter(this, 'VpcIdSSM', {
+    //   parameterName: config['resourceAttr']['databaseVpcId'],
+    //   stringValue: vpc.vpcId
+    // })
 
-    new ssm.StringParameter(this, 'SecurityGroupSSM', {
-      parameterName: config['resourceAttr']['migrationRunnerSecurityGroupId'],
-      stringValue: securityGroup.securityGroupId
-    })
+    // new ssm.StringParameter(this, 'SecurityGroupSSM', {
+    //   parameterName: config['resourceAttr']['migrationRunnerSecurityGroupId'],
+    //   stringValue: securityGroup.securityGroupId
+    // })
 
     // run database migration during CDK deployment
     const trigger = new Trigger(this, "MigrationTrigger", {
