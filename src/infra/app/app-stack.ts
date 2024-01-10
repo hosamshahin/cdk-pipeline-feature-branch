@@ -12,6 +12,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import * as sm from 'aws-cdk-lib/aws-secretsmanager';
 import { Trigger } from "aws-cdk-lib/triggers";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct'
 
 export class AppStack extends cdk.Stack {
@@ -172,8 +173,8 @@ export class AppStack extends cdk.Stack {
     });
 
     const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn']));
-    const vpcId = cdk.Fn.importValue(config['resourceAttr']['databaseVpcId'])
-    const vpc = ec2.Vpc.fromLookup(this, 'databaseVpcId', { vpcId })
+    const vpcId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['databaseVpcId']);
+    const vpc = ec2.Vpc.fromLookup(this, "VPC", { vpcId });
     const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', cdk.Fn.importValue(config['resourceAttr']['migrationRunnerSecurityGroupId']))
 
     const conn: DatabaseConnectionProps = {
