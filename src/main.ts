@@ -12,6 +12,7 @@ const env = {
 }
 
 const config = app.node.tryGetContext("config")
+const dbPipelineBranch = config['resourceAttr']['dbPipelineBranch']
 
 const targetStack = app.node.tryGetContext('TargetStack');
 
@@ -46,7 +47,7 @@ if (targetStack == 'DBPipeline') {
     region: config.region,
     githubOrg: config.githubOrg,
     githubRepo: config.githubRepo,
-    githubBranch: config.githubBranch,
+    githubBranch: dbPipelineBranch,
     preApprovalRequired: true,
   });
 
@@ -56,7 +57,7 @@ if (targetStack == 'DBPipeline') {
     region: config.region,
     githubOrg: config.githubOrg,
     githubRepo: config.githubRepo,
-    githubBranch: config.githubBranch,
+    githubBranch: dbPipelineBranch,
     preApprovalRequired: true,
   });
 }

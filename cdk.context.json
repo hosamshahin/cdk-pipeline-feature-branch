@@ -122,5 +122,21 @@
   "security-group:account=864571753663:region=us-east-1:securityGroupId=sg-08da3fe816d910251": {
     "securityGroupId": "sg-08da3fe816d910251",
     "allowAllOutbound": false
-  }
+  },
+  "availability-zones:account=864571753663:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ],
+  "availability-zones:account=938711853848:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ]
 }
