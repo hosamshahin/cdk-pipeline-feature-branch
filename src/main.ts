@@ -40,6 +40,16 @@ if (targetStack == 'Pipeline') {
 
 if (targetStack == 'DBPipeline') {
   const dbPipeline = new cdk.Stack(app, 'DBPipeline', { env });
+  new DBPipeline(dbPipeline, 'dev', {
+    deploymentEnv: 'dev',
+    deploymentAcct: 'DEV_ACCOUNT_ID',
+    region: config.region,
+    githubOrg: config.githubOrg,
+    githubRepo: config.githubRepo,
+    githubBranch: config.githubBranch,
+    preApprovalRequired: true,
+  });
+
   new DBPipeline(dbPipeline, 'prd', {
     deploymentEnv: 'prd',
     deploymentAcct: 'PRD_ACCOUNT_ID',
