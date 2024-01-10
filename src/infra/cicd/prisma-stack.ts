@@ -12,9 +12,7 @@ export class PrismaStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const currentAcct = cdk.Stack.of(this).account
     const config = this.node.tryGetContext("config")
-    const accounts = config['accounts']
     const vpc = new ec2.Vpc(this, `Vpc`, {
       maxAzs: 2,
       natGateways: 0
@@ -24,30 +22,15 @@ export class PrismaStack extends cdk.Stack {
 
     const database = new rds.DatabaseInstance(this, "PostgresInstance", {
       engine: rds.DatabaseInstanceEngine.POSTGRES,
-      publiclyAccessible: currentAcct == accounts['DEV_ACCOUNT_ID'] ? true : false,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
       vpc,
-      vpcSubnets: {
-        subnetType: currentAcct == accounts['DEV_ACCOUNT_ID'] ? ec2.SubnetType.PUBLIC : ec2.SubnetType.PRIVATE_ISOLATED
-      }
+      vpcSubnets: vpc.selectSubnets({ subnets: vpc.isolatedSubnets.concat(vpc.privateSubnets) })
     });
 
     database.connections.allowDefaultPortFrom(securityGroup);
 
-    let rdsProxyEndpoint: string= ''
-    if (currentAcct == accounts['PRD_ACCOUNT_ID']) {
-      const rdsProxy = database.addProxy('rdsProxy', {
-        secrets: [database.secret!],
-        debugLogging: true,
-        iamAuth: true,
-        vpc
-      });
-      rdsProxyEndpoint = rdsProxy.endpoint
-      rdsProxy.connections.allowFrom(securityGroup, ec2.Port.tcp(database.instanceEndpoint.port))
-    }
-
     const conn: DatabaseConnectionProps = {
-      host: accounts['PRD_ACCOUNT_ID'] ? rdsProxyEndpoint : database.instanceEndpoint.hostname,
+      host: database.instanceEndpoint.hostname,
       port: cdk.Token.asString(database.instanceEndpoint.port),
       engine: database.secret!.secretValueFromJson("engine").toString(),
       username: database.secret!.secretValueFromJson("username").toString(),
@@ -90,6 +73,7 @@ export class PrismaStack extends cdk.Stack {
     const trigger = new Trigger(this, "MigrationTrigger", {
       handler: migrationRunner,
     });
+
 
     // make sure migration is executed after the database cluster is available.
     trigger.node.addDependency(database);
