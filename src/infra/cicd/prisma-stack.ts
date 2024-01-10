@@ -60,7 +60,7 @@ export class PrismaStack extends cdk.Stack {
       exportName: config['resourceAttr']['databaseSecretArn']
     });
 
-    new cdk.CfnOutput(this, `databaSecretOutput`, {
+    new cdk.CfnOutput(this, `databaseVpcOutput`, {
       value: vpc.vpcId,
       exportName: config['resourceAttr']['databaseVpcId']
     });

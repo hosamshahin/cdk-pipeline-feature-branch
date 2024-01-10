@@ -1,12 +1,18 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfrontOrigins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
+import * as sm from 'aws-cdk-lib/aws-secretsmanager';
+import { Trigger } from "aws-cdk-lib/triggers";
+import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct'
 
 export class AppStack extends cdk.Stack {
   public readonly bucket: s3.Bucket;
@@ -164,5 +170,38 @@ export class AppStack extends cdk.Stack {
       value: restApi.urlForPath("/images"),
       description: "Images API URL for `frontend/.env` file",
     });
+
+    const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn']));
+    const vpc = ec2.Vpc.fromLookup(this, 'databaseVpcId', {
+      vpcId: cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn'])
+    })
+    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', cdk.Fn.importValue(config['resourceAttr']['migrationRunnerSecurityGroupId']))
+
+    const conn: DatabaseConnectionProps = {
+      host: databaseSecret.secretValueFromJson("host").toString(),
+      port: databaseSecret.secretValueFromJson("port").toString(),
+      engine: databaseSecret.secretValueFromJson("engine").toString(),
+      username: databaseSecret.secretValueFromJson("username").toString(),
+      password: databaseSecret.secretValueFromJson("password").toString(),
+    }
+
+    const migrationRunner = new DockerPrismaFunction(this, "DockerMigrationRunner", {
+      code: lambda.DockerImageCode.fromImageAsset(
+        './src/infra/lambda/prisma', {
+        cmd: ["migration-runner.handler"],
+        platform: Platform.LINUX_AMD64,
+      }),
+      memorySize: 256,
+      timeout: cdk.Duration.minutes(1),
+      vpc,
+      securityGroups: [securityGroup],
+      conn
+    });
+
+    // run database migration during CDK deployment
+    new Trigger(this, "MigrationTrigger", {
+      handler: migrationRunner,
+    });
+
   }
 }
