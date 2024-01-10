@@ -4,6 +4,7 @@ import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { BootstrapAdminRole } from './infra/shared/bootstrap-cross-account-admin-role';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
+import { PrismaStack } from './infra/cicd/prisma-stack';
 
 const app = new cdk.App();
 const env = {
@@ -68,6 +69,10 @@ if (targetStack == 'BootstrapAdminRole') {
 
 if (targetStack == 'GithubWebhookAPIStack') {
   new GithubWebhookAPIStack(app, 'GithubWebhookAPIStack', { env });
+}
+
+if (targetStack == 'PrismaStack') {
+  new PrismaStack(app, 'PrismaStack', { env });
 }
 
 app.synth();
