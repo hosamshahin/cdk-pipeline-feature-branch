@@ -31,9 +31,10 @@ export class AppStack extends cdk.Stack {
 
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
+    const currentAcct = cdk.Stack.of(this).account
     const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
-    const frontEndCodeBuildStepRole = config['resourceAttr']['frontEndCodeBuildStepRole']
-
+    let frontEndCodeBuildStepRole = config['resourceAttr']['frontEndCodeBuildStepRole']
+    frontEndCodeBuildStepRole = currentAcct == accounts['DEV_ACCOUNT_ID'] ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
     this.bucket = new s3.Bucket(this, "Bucket", {
@@ -184,7 +185,7 @@ export class AppStack extends cdk.Stack {
       roleName: config['resourceAttr']['adminRoleFromCicdAccount'],
       assumedBy: new iam.CompositePrincipal(
         new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${webhookAPILambdaRole}`),
-        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${frontEndCodeBuildStepRole}`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${frontEndCodeBuildStepRole}`)
       ),
       description: 'Role to grant access to target accounts',
       managedPolicies: [

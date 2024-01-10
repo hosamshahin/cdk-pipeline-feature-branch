@@ -10,6 +10,8 @@ export class GithubWebhookAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+
+
     const githubSecretUUID = new GenerateUUID(this, 'GithubSecretUUID').node.defaultChild as cdk.CustomResource;
     const githubSecretUUIDValue = githubSecretUUID.getAtt('uuid').toString();
 
@@ -21,10 +23,12 @@ export class GithubWebhookAPIStack extends cdk.Stack {
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
     const adminRoleFromCicdAccount = config['resourceAttr']['adminRoleFromCicdAccount']
+    const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
+
 
     const handlerRole = new iam.Role(this, 'generator-lambda-role', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      roleName: `${id}-lambda-role`,
+      roleName: webhookAPILambdaRole,
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
       ]
