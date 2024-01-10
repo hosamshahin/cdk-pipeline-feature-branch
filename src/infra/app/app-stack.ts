@@ -175,7 +175,8 @@ export class AppStack extends cdk.Stack {
     const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn']));
     const vpcId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['databaseVpcId']);
     const vpc = ec2.Vpc.fromLookup(this, "VPC", { vpcId });
-    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', cdk.Fn.importValue(config['resourceAttr']['migrationRunnerSecurityGroupId']))
+    const securityGroupId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['migrationRunnerSecurityGroupId']);
+    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId)
 
     const conn: DatabaseConnectionProps = {
       host: databaseSecret.secretValueFromJson("host").toString(),
