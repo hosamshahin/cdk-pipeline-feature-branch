@@ -36,14 +36,14 @@ export class PrismaStack extends cdk.Stack {
 
     let rdsProxyEndpoint: string= ''
     if (currentAcct == accounts['PRD_ACCOUNT_ID']) {
-      const rdsProxy = database.addProxy('rdsProxyExample1', {
+      const rdsProxy = database.addProxy('rdsProxy', {
         secrets: [database.secret!],
         debugLogging: true,
         iamAuth: true,
         vpc
       });
       rdsProxyEndpoint = rdsProxy.endpoint
-      rdsProxy.connections.allowDefaultPortFrom(securityGroup)
+      rdsProxy.connections.allowFrom(securityGroup, ec2.Port.tcp(database.instanceEndpoint.port))
     }
 
     const conn: DatabaseConnectionProps = {
