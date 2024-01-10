@@ -31,6 +31,9 @@ export class AppStack extends cdk.Stack {
 
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
+    const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
+    const frontEndCodeBuildStepRole = config['resourceAttr']['frontEndCodeBuildStepRole']
+
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
     this.bucket = new s3.Bucket(this, "Bucket", {
@@ -155,6 +158,7 @@ export class AppStack extends cdk.Stack {
         allowMethods: apigateway.Cors.ALL_METHODS,
       },
     });
+
     apiLikes.addMethod("POST");
 
     let apiLikesImage = apiLikes.addResource("{imageKeyS3}");
@@ -170,6 +174,23 @@ export class AppStack extends cdk.Stack {
     this.cfnOutApiImagesUrl = new cdk.CfnOutput(this, "CfnOutApiImagesUrl", {
       value: restApi.urlForPath("/images"),
       description: "Images API URL for `frontend/.env` file",
+    });
+
+    // CICD pipeline will assume this role to perform the follwoing actions
+    // 1- Delete app stack when feature branch is deleted
+    // 2- Push the client artifacts to dev/prod s3 bucket
+    // 3- invalidate CloudFront cache in dev/prod accounts
+    new iam.Role(this, 'adminRoleFromCicdAccount', {
+      roleName: config['resourceAttr']['adminRoleFromCicdAccount'],
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${webhookAPILambdaRole}`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${frontEndCodeBuildStepRole}`),
+      ),
+      description: 'Role to grant access to target accounts',
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudFrontFullAccess'),
+      ]
     });
 
     const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn']));

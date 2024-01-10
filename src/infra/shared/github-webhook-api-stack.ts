@@ -20,6 +20,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
 
     const config = this.node.tryGetContext("config")
     const accounts = config['accounts']
+    const adminRoleFromCicdAccount = config['resourceAttr']['adminRoleFromCicdAccount']
 
     const handlerRole = new iam.Role(this, 'generator-lambda-role', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
@@ -52,7 +53,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole'],
         resources: [
-          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/admin-role-from-cicd-account`
+          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/${adminRoleFromCicdAccount}`
         ],
       }),
     );
