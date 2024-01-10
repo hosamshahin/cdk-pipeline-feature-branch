@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Construct } from "constructs";
@@ -60,15 +61,17 @@ export class PrismaStack extends cdk.Stack {
       exportName: config['resourceAttr']['databaseSecretArn']
     });
 
-    new cdk.CfnOutput(this, `databaseVpcOutput`, {
-      value: vpc.vpcId,
-      exportName: config['resourceAttr']['databaseVpcId']
-    });
+    // create an SSM parameters which store export VPC ID
+    new ssm.StringParameter(this, 'VPCID', {
+      parameterName: config['resourceAttr']['databaseVpcId'],
+      stringValue: vpc.vpcId
+    })
 
     // run database migration during CDK deployment
     const trigger = new Trigger(this, "MigrationTrigger", {
       handler: migrationRunner,
     });
+
 
     // make sure migration is executed after the database cluster is available.
     trigger.node.addDependency(database);

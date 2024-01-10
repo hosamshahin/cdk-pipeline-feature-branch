@@ -31,7 +31,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         "migrationRunnerSecurityGroupId": "migrationRunnerSecurityGroupId",
         "migrationRunnerName": "migrationRunner",
         "databaseSecretArn": "databaseSecretArn",
-        "databaseVpcId": "databaseVpcId"
+        "databaseVpcId": "/database/VpcId"
       }
     }
   }
