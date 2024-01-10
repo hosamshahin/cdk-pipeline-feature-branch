@@ -13,10 +13,7 @@ export class PrismaStack extends cdk.Stack {
     super(scope, id, props);
 
     const config = this.node.tryGetContext("config")
-    const vpc = new ec2.Vpc(this, `Vpc`, {
-      maxAzs: 2,
-      natGateways: 0
-    });
+    const vpc = new ec2.Vpc(this, `Vpc`);
 
     const securityGroup = new ec2.SecurityGroup(this, `SecurityGroup`, { vpc });
 
