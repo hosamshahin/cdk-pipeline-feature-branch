@@ -14,5 +14,67 @@
     "us-east-1d",
     "us-east-1e",
     "us-east-1f"
-  ]
+  ],
+  "ssm:account=938711853848:parameterName=/database/VpcId:region=us-east-1": "vpc-0e17588c491fe389e",
+  "ssm:account=938711853848:parameterName=/database/SecurityGroupId:region=us-east-1": "sg-0f8e3e96a17f46e1c",
+  "vpc-provider:account=938711853848:filter.vpc-id=vpc-0e17588c491fe389e:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0e17588c491fe389e",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "938711853848",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-0f54675085ba997cf",
+            "cidr": "10.0.0.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0d149241ee13deb49"
+          },
+          {
+            "subnetId": "subnet-00de577f7f59bd49b",
+            "cidr": "10.0.32.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-0a8bfe99ca7f404f3"
+          },
+          {
+            "subnetId": "subnet-0c0fa4e9d491a514b",
+            "cidr": "10.0.64.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0dfb2019181d981f1"
+          }
+        ]
+      },
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-0cd2b8a12959be598",
+            "cidr": "10.0.96.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0e3745ff6c379a78b"
+          },
+          {
+            "subnetId": "subnet-071cc3b06f5a9f2c0",
+            "cidr": "10.0.128.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-09bab49fe0595de11"
+          },
+          {
+            "subnetId": "subnet-0c197eafefddd9240",
+            "cidr": "10.0.160.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0a75ca125d0d9a294"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=938711853848:region=us-east-1:securityGroupId=sg-0f8e3e96a17f46e1c": {
+    "securityGroupId": "sg-0f8e3e96a17f46e1c",
+    "allowAllOutbound": false
+  }
 }

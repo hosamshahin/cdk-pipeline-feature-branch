@@ -1,13 +1,13 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfrontOrigins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import * as sm from 'aws-cdk-lib/aws-secretsmanager';
