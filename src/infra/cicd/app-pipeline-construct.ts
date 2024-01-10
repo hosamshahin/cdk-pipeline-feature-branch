@@ -38,7 +38,7 @@ export class Pipeline extends Construct {
 
     const pipeline = new CodePipeline(this, 'Pipeline', {
       crossAccountKeys: true,
-      selfMutation: false,
+      selfMutation: true,
       pipelineName: `Pipeline-${props.deploymentEnv}`,
       synth: defultSynth
     });
