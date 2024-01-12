@@ -64,8 +64,8 @@ async function updateLambdaCode(
 
   // Parse the JSON to ensure it's validity (and avoid ugly errors at runtime)
   let config = JSON.parse(stringifiedConfig);
-  config.clientId = secret.clientId;
-  config.clientSecret = secret.clientSecret;
+  config.clientId = secret.client_id;
+  config.clientSecret = secret.client_secret;
 
   // Fetch and extract Lambda zip contents to temporary folder, add configuration.json, and rezip
   const respLambda = await lambda.send(new GetFunctionCommand({ FunctionName: lambdaFunction }));
