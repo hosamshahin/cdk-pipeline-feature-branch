@@ -86,7 +86,7 @@ export class AppStack extends cdk.Stack {
      * CloudFront Distribution and lambda edge
      */
     const authSecret = new sm.Secret(this, 'AuthSecret');
-    const generateSecret = (new GenerateSecret(scope, 'GenerateSecret').node.defaultChild as cdk.CustomResource).getAtt('secret').toString();
+    const generateSecret = (new GenerateSecret(this, 'GenerateSecret').node.defaultChild as cdk.CustomResource).getAtt('secret').toString();
 
     const cloudfrontAuthPolicyDocument = new iam.PolicyDocument({
       statements: [
@@ -190,7 +190,7 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontCheckAuthFunction = new lambda.Function(this, 'CloudfrontCheckAuthFunction', {
       functionName: `${edgeLambdaName}-check-auth`,
-      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/check-auth")),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/check-auth'),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -199,7 +199,7 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontParseAuthFunction = new lambda.Function(this, 'CloudfrontParseAuthFunction', {
       functionName: `${edgeLambdaName}-parse-auth`,
-      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/parse-auth")),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/parse-auth'),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -208,7 +208,7 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontRefreshAuthFunction = new lambda.Function(this, 'CloudfrontRefreshAuthFunction', {
       functionName: `${edgeLambdaName}-refresh-auth`,
-      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/refresh-auth")),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/refresh-auth'),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -217,7 +217,7 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontSignOutFunction = new lambda.Function(this, 'CloudfrontSignOutFunction', {
       functionName: `${edgeLambdaName}-sign-out`,
-      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/sign-out")),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/sign-out'),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -226,7 +226,7 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontHttpHeadersFunction = new lambda.Function(this, 'CloudfrontHttpHeadersFunction', {
       functionName: `${edgeLambdaName}-http-headers`,
-      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/http-headers")),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/http-headers'),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -235,7 +235,7 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontRewriteTrailingSlashFunction = new lambda.Function(this, 'CloudfrontRewriteTrailingSlashFunction', {
       functionName: `${edgeLambdaName}-trailing-slash`,
-      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/rewrite-trailing-slash")),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/rewrite-trailing-slash'),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -272,42 +272,42 @@ export class AppStack extends cdk.Stack {
       staticContentRootObject: 'props.staticContentRootObject'
     };
 
-    const cloudfrontCheckAuthFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontCheckAuthFn', {
+    const cloudfrontCheckAuthFnArn = (new LambdaCodeUpdate(this, 'CloudfrontCheckAuthFn', {
       lambdaFunction: cloudfrontCheckAuthFunction.functionName,
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
-    const cloudfrontParseAuthFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontParseAuthFn', {
+    const cloudfrontParseAuthFnArn = (new LambdaCodeUpdate(this, 'CloudfrontParseAuthFn', {
       lambdaFunction: cloudfrontParseAuthFunction.functionName,
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
-    const cloudfrontRefreshAuthFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontRefreshAuthFn', {
+    const cloudfrontRefreshAuthFnArn = (new LambdaCodeUpdate(this, 'CloudfrontRefreshAuthFn', {
       lambdaFunction: cloudfrontRefreshAuthFunction.functionName,
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
-    const cloudfrontSignOutFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontSignOutFn', {
+    const cloudfrontSignOutFnArn = (new LambdaCodeUpdate(this, 'CloudfrontSignOutFn', {
       lambdaFunction: cloudfrontSignOutFunction.functionName,
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
-    const cloudfrontRewriteTrailingSlashFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontRewriteTrailingSlashFn', {
+    const cloudfrontRewriteTrailingSlashFnArn = (new LambdaCodeUpdate(this, 'CloudfrontRewriteTrailingSlashFn', {
       lambdaFunction: cloudfrontRewriteTrailingSlashFunction.functionName,
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
-    const cloudfrontHttpHeadersFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontHttpHeadersFn', {
+    const cloudfrontHttpHeadersFnArn = (new LambdaCodeUpdate(this, 'CloudfrontHttpHeadersFn', {
       lambdaFunction: cloudfrontHttpHeadersFunction.functionName,
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,

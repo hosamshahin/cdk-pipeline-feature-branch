@@ -100,7 +100,7 @@ class LambdaCodeUpdateProvider extends Construct {
     });
 
     const onEvent = new lambda.Function(this, 'lambdaCodeUpdateFunction', {
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/api-gateway/bundles/lambda-code-update')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/app/edge-lambda/bundles/lambda-code-update')),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.onEvent',
       role: lambdaRole,

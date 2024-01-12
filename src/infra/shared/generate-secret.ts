@@ -33,7 +33,7 @@ class GenerateSecretProvider extends Construct {
     super(scope, id);
 
     const onEvent = new lambda.Function(this, 'generateSecretFunction', {
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/api-gateway/bundles/generate-secret')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/app/edge-lambda/bundles/generate-secret')),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.onEvent',
     });

@@ -5,6 +5,7 @@ import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { BootstrapAdminRole } from './infra/shared/bootstrap-cross-account-admin-role';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
 import { PrismaStack } from './infra/cicd/prisma-stack';
+import { AppStack } from './infra/app/app-stack';
 
 const app = new cdk.App();
 const env = {
@@ -73,6 +74,10 @@ if (targetStack == 'GithubWebhookAPIStack') {
 
 if (targetStack == 'PrismaStack') {
   new PrismaStack(app, 'PrismaStack', { env });
+}
+
+if (targetStack == 'AppStack') {
+  new AppStack(app, 'AppStack', 'CloudfrontAuth', { env });
 }
 
 app.synth();
