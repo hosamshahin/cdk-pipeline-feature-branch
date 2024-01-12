@@ -24,7 +24,8 @@
         "adminRoleFromCicdAccount": "adminRoleFromCicdAccount",
         "webhookAPILambdaRole": "webhookAPILambdaRole",
         "frontEndCodeBuildStepRole": "frontEndCodeBuildStepRole",
-        "dbPipelineBranch": "dbPipelineBranch"
+        "dbPipelineBranch": "dbPipelineBranch",
+        "authSecretName": "authSecret"
       }
     }
   },

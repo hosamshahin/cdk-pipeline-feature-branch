@@ -85,15 +85,7 @@ export class AppStack extends cdk.Stack {
     /**
      * CloudFront Distribution and lambda edge
      */
-    const authSecret = new sm.Secret(this, 'AuthSecret', {
-      secretName: id + '-rds-credentials',
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({ clientId: '' }),
-        generateStringKey: 'clientSecret',
-        excludePunctuation: true,
-        includeSpace: false,
-      }
-    });
+    const authSecret = sm.Secret.fromSecretCompleteArn(this, 'AuthSecret', cdk.Fn.importValue('AuthSecretOutput'));
 
     const generateSecret = (new GenerateSecret(this, 'GenerateSecret').node.defaultChild as cdk.CustomResource).getAtt('secret').toString();
 

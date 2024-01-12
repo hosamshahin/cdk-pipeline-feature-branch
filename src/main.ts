@@ -3,6 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { BootstrapAdminRole } from './infra/shared/bootstrap-cross-account-admin-role';
+import { AuthSecret } from './infra/shared/bootstrap-cross-account-auth-secret';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
 import { PrismaStack } from './infra/cicd/prisma-stack';
 import { AppStack } from './infra/app/app-stack';
@@ -66,6 +67,10 @@ if (targetStack == 'DBPipeline') {
 
 if (targetStack == 'BootstrapAdminRole') {
   new BootstrapAdminRole(app, 'BootstrapAdminRole', { env })
+}
+
+if (targetStack == 'AuthSecret') {
+  new AuthSecret(app, 'AuthSecret', { env })
 }
 
 if (targetStack == 'GithubWebhookAPIStack') {

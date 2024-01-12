@@ -35,7 +35,8 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         "adminRoleFromCicdAccount": "adminRoleFromCicdAccount",
         "webhookAPILambdaRole": "webhookAPILambdaRole",
         "frontEndCodeBuildStepRole": "frontEndCodeBuildStepRole",
-        "dbPipelineBranch": "dbPipelineBranch"
+        "dbPipelineBranch": "dbPipelineBranch",
+        "authSecretName": "authSecret"
       }
     }
   }
