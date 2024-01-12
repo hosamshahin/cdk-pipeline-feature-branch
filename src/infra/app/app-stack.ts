@@ -88,7 +88,10 @@ export class AppStack extends cdk.Stack {
     const authSecret = new sm.Secret(this, 'AuthSecret', {
       secretName: id + '-rds-credentials',
       generateSecretString: {
-        secretStringTemplate: JSON.stringify({ clientId: '', clientSecret: '' })
+        secretStringTemplate: JSON.stringify({ clientId: '' }),
+        generateStringKey: 'clientSecret',
+        excludePunctuation: true,
+        includeSpace: false,
       }
     });
 
