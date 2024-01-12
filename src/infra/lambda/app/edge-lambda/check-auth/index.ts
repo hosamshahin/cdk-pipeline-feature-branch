@@ -63,7 +63,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     }
 
     // Return the request unaltered to allow access to the resource:
-    request.headers["authorization-ltio"] = [{ "key": "authorization-ltio", "value": "Bearer " + cookies.idToken }];
+    request.headers["Authorization"] = [{ "key": "Authorization", "value": "Bearer " + cookies.idToken }];
     CONFIG.logger.debug('Access allowed:', request);
 
     // validate the idToken
