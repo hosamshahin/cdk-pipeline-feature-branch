@@ -85,7 +85,13 @@ export class AppStack extends cdk.Stack {
     /**
      * CloudFront Distribution and lambda edge
      */
-    const authSecret = new sm.Secret(this, 'AuthSecret');
+    const authSecret = new sm.Secret(this, 'AuthSecret', {
+      secretName: id + '-rds-credentials',
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({ clientId: '', clientSecret: '' })
+      }
+    });
+
     const generateSecret = (new GenerateSecret(this, 'GenerateSecret').node.defaultChild as cdk.CustomResource).getAtt('secret').toString();
 
     const cloudfrontAuthPolicyDocument = new iam.PolicyDocument({
@@ -268,8 +274,8 @@ export class AppStack extends cdk.Stack {
       logLevel: LogLevel.DEBUG,
       nonceSigningSecret: generateSecret.toString(),
       idTokenCookieName: 'px-access-token',
-      staticContentPathPattern: 'props.staticContentPathPattern?.slice(0, -1)',
-      staticContentRootObject: 'props.staticContentRootObject'
+      staticContentPathPattern: 'staticContentPathPattern',
+      staticContentRootObject: 'staticContentRootObject'
     };
 
     const cloudfrontCheckAuthFnArn = (new LambdaCodeUpdate(this, 'CloudfrontCheckAuthFn', {
