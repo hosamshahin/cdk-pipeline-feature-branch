@@ -13,7 +13,19 @@ import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import * as sm from 'aws-cdk-lib/aws-secretsmanager';
 import { Trigger } from "aws-cdk-lib/triggers";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import { GenerateSecret } from '../shared/generate-secret'
+import { LambdaCodeUpdate } from '../shared/lambda-code-update';
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct'
+
+export enum LogLevel {
+  NONE = 'none',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  DEBUG = 'debug',
+}
 
 export class AppStack extends cdk.Stack {
   public readonly bucket: s3.Bucket;
@@ -26,7 +38,10 @@ export class AppStack extends cdk.Stack {
   public readonly cfnOutApiImagesUrl: cdk.CfnOutput;
   public readonly cfnOutApiLikesUrl: cdk.CfnOutput;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct,
+    id: string,
+    edgeLambdaNameParam?: string,
+    props?: cdk.StackProps) {
     super(scope, id, props);
 
     const config = this.node.tryGetContext("config")
@@ -67,6 +82,300 @@ export class AppStack extends cdk.Stack {
       })
     )
 
+    /**
+     * CloudFront Distribution and lambda edge
+     */
+    const authSecret = new sm.Secret(this, 'AuthSecret');
+    const generateSecret = (new GenerateSecret(scope, 'GenerateSecret').node.defaultChild as cdk.CustomResource).getAtt('secret').toString();
+
+    const cloudfrontAuthPolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            'secretsmanager:GetResourcePolicy',
+            'secretsmanager:GetSecretValue',
+            'secretsmanager:DescribeSecret',
+            'secretsmanager:ListSecretVersionIds',
+          ],
+          resources: [authSecret.secretArn],
+        }),
+      ],
+    });
+
+    const cloudfrontReadOnlyAccessPolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            'acm:ListCertificates',
+            'cloudfront:DescribeFunction',
+            'cloudfront:Get*',
+            'cloudfront:List*',
+            'iam:ListServerCertificates',
+            'route53:List*',
+            'waf:ListWebACLs',
+            'waf:GetWebACL',
+            'wafv2:ListWebACLs',
+            'wafv2:GetWebACL',
+          ],
+          resources: ['*'],
+        }),
+      ],
+    });
+
+    const lambdaReadOnlyAccessPolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            'cloudformation:DescribeStacks',
+            'cloudformation:ListStackResources',
+            'cloudwatch:GetMetricData',
+            'cloudwatch:ListMetrics',
+            'ec2:DescribeSecurityGroups',
+            'ec2:DescribeSubnets',
+            'ec2:DescribeVpcs',
+            'kms:ListAliases',
+            'iam:GetPolicy',
+            'iam:GetPolicyVersion',
+            'iam:GetRole',
+            'iam:GetRolePolicy',
+            'iam:ListAttachedRolePolicies',
+            'iam:ListRolePolicies',
+            'iam:ListRoles',
+            'logs:DescribeLogGroups',
+            'lambda:Get*',
+            'lambda:List*',
+            'states:DescribeStateMachine',
+            'states:ListStateMachines',
+            'tag:GetResources',
+            'xray:GetTraceSummaries',
+            'xray:BatchGetTraces',
+          ],
+          resources: ['*'],
+        }),
+        new iam.PolicyStatement({
+          actions: [
+            'logs:DescribeLogStreams',
+            'logs:GetLogEvents',
+            'logs:FilterLogEvents',
+          ],
+          resources: ['arn:aws:logs:*:*:log-group:/aws/lambda/*'],
+        }),
+      ],
+    });
+
+    const lambdaBasicExecutionRolePolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          resources: ['*'],
+          actions: [
+            'logs:CreateLogGroup',
+            'logs:CreateLogStream',
+            'logs:PutLogEvents',
+          ],
+        }),
+      ],
+    });
+
+    const cloudfrontAuthRole = new iam.Role(this, 'CloudfrontAuthRole', {
+      assumedBy: new iam.CompositePrincipal(new iam.ServicePrincipal('lambda.amazonaws.com'), new iam.ServicePrincipal('edgelambda.amazonaws.com')),
+      inlinePolicies: {
+        cloudfrontAuthPolicyDocument: cloudfrontAuthPolicyDocument,
+        cloudfrontReadOnlyAccessPolicyDocument: cloudfrontReadOnlyAccessPolicyDocument,
+        lambdaReadOnlyAccessPolicyDocument: lambdaReadOnlyAccessPolicyDocument,
+        lambdaBasicExecutionRolePolicyDocument: lambdaBasicExecutionRolePolicyDocument,
+      },
+    });
+
+    let edgeLambdaName = edgeLambdaNameParam || 'CloudfrontAuth';
+
+    const cloudfrontCheckAuthFunction = new lambda.Function(this, 'CloudfrontCheckAuthFunction', {
+      functionName: `${edgeLambdaName}-check-auth`,
+      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/check-auth")),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'bundle.handler',
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5),
+    });
+
+    const cloudfrontParseAuthFunction = new lambda.Function(this, 'CloudfrontParseAuthFunction', {
+      functionName: `${edgeLambdaName}-parse-auth`,
+      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/parse-auth")),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'bundle.handler',
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5),
+    });
+
+    const cloudfrontRefreshAuthFunction = new lambda.Function(this, 'CloudfrontRefreshAuthFunction', {
+      functionName: `${edgeLambdaName}-refresh-auth`,
+      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/refresh-auth")),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'bundle.handler',
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5),
+    });
+
+    const cloudfrontSignOutFunction = new lambda.Function(this, 'CloudfrontSignOutFunction', {
+      functionName: `${edgeLambdaName}-sign-out`,
+      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/sign-out")),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'bundle.handler',
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5),
+    });
+
+    const cloudfrontHttpHeadersFunction = new lambda.Function(this, 'CloudfrontHttpHeadersFunction', {
+      functionName: `${edgeLambdaName}-http-headers`,
+      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/http-headers")),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'bundle.handler',
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5),
+    });
+
+    const cloudfrontRewriteTrailingSlashFunction = new lambda.Function(this, 'CloudfrontRewriteTrailingSlashFunction', {
+      functionName: `${edgeLambdaName}-trailing-slash`,
+      code: lambda.Code.fromAsset(require.resolve("../lambda/app/edge-lambda/bundles/rewrite-trailing-slash")),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'bundle.handler',
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5),
+    });
+
+    const lambdaEdgeConfig: any = {
+      oauthScopes: [
+        cognito.OAuthScope.EMAIL.scopeName,
+        cognito.OAuthScope.OPENID.scopeName,
+        'groups',
+      ],
+      authEndpoint: 'https://sso.google.com/as/authorization.oauth2',
+      accessTokenEndpoint: 'https://sso.google.com/as/token.oauth2',
+      introspectEndpoint: 'https://sso.google.com/as/introspect.oauth2',
+      pingEndSessionEndpoint: 'https://sso.google.com/idp/startSLO.ping',
+      redirectPathSignIn: '/parseauth',
+      redirectPathSignOut: '/',
+      signOutUrl: '/signout',
+      redirectPathAuthRefresh: '/refreshauth',
+      cookieSettings: {},
+      httpHeaders: {
+        'Content-Security-Policy': "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com",
+        'Strict-Transport-Security': 'max-age=31536000; includeSubdomains; preload',
+        'Referrer-Policy': 'same-origin',
+        'X-XSS-Protection': '1; mode=block',
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+      },
+      logLevel: LogLevel.DEBUG,
+      nonceSigningSecret: generateSecret.toString(),
+      idTokenCookieName: 'px-access-token',
+      staticContentPathPattern: 'props.staticContentPathPattern?.slice(0, -1)',
+      staticContentRootObject: 'props.staticContentRootObject'
+    };
+
+    const cloudfrontCheckAuthFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontCheckAuthFn', {
+      lambdaFunction: cloudfrontCheckAuthFunction.functionName,
+      configuration: JSON.stringify(lambdaEdgeConfig),
+      secretArn: authSecret.secretArn,
+      version: Math.floor(Date.now() / 1000).toString(),
+    }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
+    const cloudfrontParseAuthFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontParseAuthFn', {
+      lambdaFunction: cloudfrontParseAuthFunction.functionName,
+      configuration: JSON.stringify(lambdaEdgeConfig),
+      secretArn: authSecret.secretArn,
+      version: Math.floor(Date.now() / 1000).toString(),
+    }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
+    const cloudfrontRefreshAuthFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontRefreshAuthFn', {
+      lambdaFunction: cloudfrontRefreshAuthFunction.functionName,
+      configuration: JSON.stringify(lambdaEdgeConfig),
+      secretArn: authSecret.secretArn,
+      version: Math.floor(Date.now() / 1000).toString(),
+    }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
+    const cloudfrontSignOutFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontSignOutFn', {
+      lambdaFunction: cloudfrontSignOutFunction.functionName,
+      configuration: JSON.stringify(lambdaEdgeConfig),
+      secretArn: authSecret.secretArn,
+      version: Math.floor(Date.now() / 1000).toString(),
+    }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
+    const cloudfrontRewriteTrailingSlashFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontRewriteTrailingSlashFn', {
+      lambdaFunction: cloudfrontRewriteTrailingSlashFunction.functionName,
+      configuration: JSON.stringify(lambdaEdgeConfig),
+      secretArn: authSecret.secretArn,
+      version: Math.floor(Date.now() / 1000).toString(),
+    }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
+    const cloudfrontHttpHeadersFnArn = (new LambdaCodeUpdate(scope, 'CloudfrontHttpHeadersFn', {
+      lambdaFunction: cloudfrontHttpHeadersFunction.functionName,
+      configuration: JSON.stringify(lambdaEdgeConfig),
+      secretArn: authSecret.secretArn,
+      version: Math.floor(Date.now() / 1000).toString(),
+    }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
+    var edgeLambdas: cloudfront.EdgeLambda[] = [{
+      eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+      functionVersion: lambda.Version.fromVersionArn(this, 'cloudfrontCheckAuthFnVersionArn', cloudfrontCheckAuthFnArn),
+      includeBody: false,
+    },
+    {
+      eventType: cloudfront.LambdaEdgeEventType.ORIGIN_RESPONSE,
+      functionVersion: lambda.Version.fromVersionArn(this, 'cloudfrontHttpHeadersFnVersionArn', cloudfrontHttpHeadersFnArn),
+      includeBody: false,
+    },
+    {
+      eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+      functionVersion: lambda.Version.fromVersionArn(this, 'cloudfrontRewriteTrailingSlashFnVersionArn', cloudfrontRewriteTrailingSlashFnArn),
+      includeBody: false,
+    }];
+
+    const additionalBehaviors: any = {
+      'parseauth': {
+        origin: new origins.HttpOrigin('will-never-be-reached.org'),
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        compress: false,
+        edgeLambdas: [{
+          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+          functionVersion: lambda.Version.fromVersionArn(this, 'cloudfrontParseAuthFnVersionArn', cloudfrontParseAuthFnArn),
+          includeBody: false,
+        }],
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      },
+      'refreshauth': {
+        origin: new origins.HttpOrigin('will-never-be-reached.org'),
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        compress: false,
+        edgeLambdas: [{
+          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+          functionVersion: lambda.Version.fromVersionArn(this, 'cloudfrontRefreshAuthFnVersionArn', cloudfrontRefreshAuthFnArn),
+          includeBody: false,
+        }],
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      },
+      '/signout': {
+        origin: new origins.HttpOrigin('will-never-be-reached.org'),
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        compress: false,
+        edgeLambdas: [{
+          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+          functionVersion: lambda.Version.fromVersionArn(this, 'cloudfrontSignOutFnVersionArn', cloudfrontSignOutFnArn),
+          includeBody: false,
+        }],
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      },
+      "/uploads/*": {
+        origin: new cloudfrontOrigins.S3Origin(this.bucket, {
+          originPath: "/",
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+    };
+
+
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
       defaultBehavior: {
@@ -74,15 +383,9 @@ export class AppStack extends cdk.Stack {
           originPath: "/frontend",
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        edgeLambdas
       },
-      additionalBehaviors: {
-        "/uploads/*": {
-          origin: new cloudfrontOrigins.S3Origin(this.bucket, {
-            originPath: "/",
-          }),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        },
-      },
+      additionalBehaviors
     });
 
     this.cfnOutCloudFrontUrl = new cdk.CfnOutput(this, "CfnOutCloudFrontUrl", {
