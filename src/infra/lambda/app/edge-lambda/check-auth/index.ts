@@ -67,7 +67,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     CONFIG.logger.debug('Access allowed:', request);
 
     // validate the idToken
-    const url = `https://sso.google.com/pf/JWKS`;
+    const url = `https://www.googleapis.com/oauth2/v1/certs`;
     CONFIG.logger.debug(`Fetching JWKS for ${url}`);
 
     const jwks = (await common.fetchUrl(url)).toString();
@@ -76,7 +76,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     const JWKS = jose.createLocalJWKSet(JSON.parse(jwks))
 
     const { payload, protectedHeader } = await jose.jwtVerify(cookies.idToken!, JWKS, {
-      issuer: 'https://sso.google.com',
+      issuer: 'https://accounts.google.com',
       audience: CONFIG.clientId,
     })
     CONFIG.logger.debug(protectedHeader)

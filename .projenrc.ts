@@ -11,6 +11,16 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   buildWorkflow: false,
   release: false,
   sampleCode: false,
+  deps:[
+    'ts-deepmerge@^6.0.2',
+    'deep-diff@^1.0.2',
+    'npmlog@^4.1.2'
+  ],
+  devDeps: [
+    '@types/npmlog@^4.1.4',
+    '@types/deep-diff@^1.0.2',
+    'cdk-nag@2.23.2'
+  ],
   context: {
     "config": {
       "githubOrg": "hosamshahin",

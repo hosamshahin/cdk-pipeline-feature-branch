@@ -1,12 +1,22 @@
 {
   "dependencies": [
     {
+      "name": "@types/deep-diff",
+      "version": "^1.0.2",
+      "type": "build"
+    },
+    {
       "name": "@types/jest",
       "type": "build"
     },
     {
       "name": "@types/node",
       "version": "^18",
+      "type": "build"
+    },
+    {
+      "name": "@types/npmlog",
+      "version": "^4.1.4",
       "type": "build"
     },
     {
@@ -22,6 +32,11 @@
     {
       "name": "aws-cdk",
       "version": "2.117.0",
+      "type": "build"
+    },
+    {
+      "name": "cdk-nag",
+      "version": "2.23.2",
       "type": "build"
     },
     {
@@ -74,6 +89,21 @@
     {
       "name": "constructs",
       "version": "^10.2.55",
+      "type": "runtime"
+    },
+    {
+      "name": "deep-diff",
+      "version": "^1.0.2",
+      "type": "runtime"
+    },
+    {
+      "name": "npmlog",
+      "version": "^4.1.2",
+      "type": "runtime"
+    },
+    {
+      "name": "ts-deepmerge",
+      "version": "^6.0.2",
       "type": "runtime"
     }
   ],

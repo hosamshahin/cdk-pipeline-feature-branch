@@ -5,6 +5,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct, Node } from 'constructs';
+import { generateFileHash } from '../lambda/utils/utils';
 
 export interface LambdaCodeUpdateProps {
   readonly lambdaFunction: string;
@@ -37,7 +38,7 @@ class LambdaCodeUpdateProvider extends Construct {
   /**
    * Returns the singleton provider.
    */
-  public static getOrCreate(scope: Construct, props:LambdaCodeUpdateProps) {
+  public static getOrCreate(scope: Construct, props: LambdaCodeUpdateProps) {
     const providerId = 'lambdaCodeUpdateProvider';
     const stack = Stack.of(scope);
     const group = Node.of(stack).tryFindChild(providerId) as LambdaCodeUpdateProvider || new LambdaCodeUpdateProvider(stack, providerId, props);
@@ -46,7 +47,7 @@ class LambdaCodeUpdateProvider extends Construct {
 
   private readonly provider: cr.Provider;
 
-  constructor(scope: Construct, id: string, props:LambdaCodeUpdateProps) {
+  constructor(scope: Construct, id: string, props: LambdaCodeUpdateProps) {
     super(scope, id);
 
     const currentAcct = cdk.Stack.of(this).account
@@ -66,8 +67,7 @@ class LambdaCodeUpdateProvider extends Construct {
             `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-refresh-auth`,
             `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-sign-out`,
             `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-http-headers`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-trailing-slash`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-get-root`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-trailing-slash`
           ],
         }),
         new iam.PolicyStatement({
@@ -105,11 +105,14 @@ class LambdaCodeUpdateProvider extends Construct {
     });
 
     const onEvent = new lambda.Function(this, 'lambdaCodeUpdateFunction', {
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/app/edge-lambda/bundles/lambda-code-update')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/app/edge-lambda/bundles/lambda-code-update'), {
+        assetHash: generateFileHash(path.join(__dirname, '../lambda/app/edge-lambda/lambda-code-update/index.ts')),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.onEvent',
       role: lambdaRole,
-      timeout: cdk.Duration.minutes(15)
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 512
     });
 
     this.provider = new cr.Provider(this, 'lambdaCodeUpdateProvider', {

@@ -18,6 +18,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { GenerateSecret } from '../shared/generate-secret'
 import { LambdaCodeUpdate } from '../shared/lambda-code-update';
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct'
+import { generateFileHash } from '../lambda/utils/utils';
 
 export enum LogLevel {
   NONE = 'none',
@@ -191,7 +192,9 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontCheckAuthFunction = new lambda.Function(this, 'CloudfrontCheckAuthFunction', {
       functionName: `${edgeLambdaName}-check-auth`,
-      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/check-auth'),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/check-auth', {
+        assetHash: generateFileHash('src/infra/lambda/app/edge-lambda/check-auth/index.ts'),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -200,7 +203,9 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontParseAuthFunction = new lambda.Function(this, 'CloudfrontParseAuthFunction', {
       functionName: `${edgeLambdaName}-parse-auth`,
-      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/parse-auth'),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/parse-auth', {
+        assetHash: generateFileHash('src/infra/lambda/app/edge-lambda/parse-auth/index.ts'),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -209,7 +214,9 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontRefreshAuthFunction = new lambda.Function(this, 'CloudfrontRefreshAuthFunction', {
       functionName: `${edgeLambdaName}-refresh-auth`,
-      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/refresh-auth'),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/refresh-auth', {
+        assetHash: generateFileHash('src/infra/lambda/app/edge-lambda/refresh-auth/index.ts'),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -218,7 +225,9 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontSignOutFunction = new lambda.Function(this, 'CloudfrontSignOutFunction', {
       functionName: `${edgeLambdaName}-sign-out`,
-      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/sign-out'),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/sign-out', {
+        assetHash: generateFileHash('src/infra/lambda/app/edge-lambda/sign-out/index.ts'),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -227,7 +236,9 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontHttpHeadersFunction = new lambda.Function(this, 'CloudfrontHttpHeadersFunction', {
       functionName: `${edgeLambdaName}-http-headers`,
-      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/http-headers'),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/http-headers', {
+        assetHash: generateFileHash('src/infra/lambda/app/edge-lambda/http-headers/index.ts'),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -236,7 +247,9 @@ export class AppStack extends cdk.Stack {
 
     const cloudfrontRewriteTrailingSlashFunction = new lambda.Function(this, 'CloudfrontRewriteTrailingSlashFunction', {
       functionName: `${edgeLambdaName}-trailing-slash`,
-      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/rewrite-trailing-slash'),
+      code: lambda.Code.fromAsset('src/infra/lambda/app/edge-lambda/bundles/rewrite-trailing-slash', {
+        assetHash: generateFileHash('src/infra/lambda/app/edge-lambda/rewrite-trailing-slash/index.ts'),
+      }),
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.handler',
       role: cloudfrontAuthRole,
@@ -244,8 +257,8 @@ export class AppStack extends cdk.Stack {
     });
 
 
-    const authUrl = authSecret.secretValueFromJson('auth_uri').toString()
-    const tokenUrl = authSecret.secretValueFromJson('token_uri').toString()
+    const auth_uri = "https://accounts.google.com/o/oauth2/auth"
+    const token_uri = "https://oauth2.googleapis.com/token"
 
     const lambdaEdgeConfig: any = {
       oauthScopes: [
@@ -253,10 +266,10 @@ export class AppStack extends cdk.Stack {
         cognito.OAuthScope.OPENID.scopeName,
         'groups',
       ],
-      authEndpoint: authUrl,
-      accessTokenEndpoint: tokenUrl,
-      introspectEndpoint: tokenUrl,
-      pingEndSessionEndpoint: tokenUrl,
+      authEndpoint: auth_uri,
+      accessTokenEndpoint: token_uri,
+      introspectEndpoint: token_uri,
+      pingEndSessionEndpoint: token_uri,
       redirectPathSignIn: '/parseauth',
       redirectPathSignOut: '/',
       signOutUrl: '/signout',
@@ -316,6 +329,7 @@ export class AppStack extends cdk.Stack {
       version: Math.floor(Date.now() / 1000).toString(),
       edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
+
 
     const cloudfrontHttpHeadersFnArn = (new LambdaCodeUpdate(this, 'CloudfrontHttpHeadersFn', {
       lambdaFunction: cloudfrontHttpHeadersFunction.functionName,

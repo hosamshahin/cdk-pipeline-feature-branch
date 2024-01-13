@@ -211,13 +211,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/jest,@types/node,@typescript-eslint/eslint-plugin,@typescript-eslint/parser,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,eslint,jest,jest-junit,projen,ts-jest,ts-node,typescript,constructs"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/deep-diff,@types/jest,@types/node,@types/npmlog,@typescript-eslint/eslint-plugin,@typescript-eslint/parser,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,eslint,jest,jest-junit,projen,ts-jest,ts-node,typescript,constructs,deep-diff,npmlog,ts-deepmerge"
         },
         {
           "exec": "npm install"
         },
         {
-          "exec": "npm update @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript constructs"
+          "exec": "npm update @types/deep-diff @types/jest @types/node @types/npmlog @typescript-eslint/eslint-plugin @typescript-eslint/parser esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript constructs deep-diff npmlog ts-deepmerge"
         },
         {
           "exec": "npx projen"

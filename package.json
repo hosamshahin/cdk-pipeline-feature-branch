@@ -24,11 +24,14 @@
     "projen": "npx projen"
   },
   "devDependencies": {
+    "@types/deep-diff": "^1.0.2",
     "@types/jest": "^29.5.11",
     "@types/node": "^18",
+    "@types/npmlog": "^4.1.4",
     "@typescript-eslint/eslint-plugin": "^6",
     "@typescript-eslint/parser": "^6",
     "aws-cdk": "2.117.0",
+    "cdk-nag": "2.23.2",
     "esbuild": "^0.19.11",
     "eslint": "^8",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -42,7 +45,10 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.117.0",
-    "constructs": "^10.2.55"
+    "constructs": "^10.2.55",
+    "deep-diff": "^1.0.2",
+    "npmlog": "^4.1.2",
+    "ts-deepmerge": "^6.0.2"
   },
   "license": "Apache-2.0",
   "version": "0.0.0",
