@@ -243,16 +243,20 @@ export class AppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(5),
     });
 
+
+    const authUrl = authSecret.secretValueFromJson('auth_uri').toString()
+    const tokenUrl = authSecret.secretValueFromJson('token_uri').toString()
+
     const lambdaEdgeConfig: any = {
       oauthScopes: [
         cognito.OAuthScope.EMAIL.scopeName,
         cognito.OAuthScope.OPENID.scopeName,
         'groups',
       ],
-      authEndpoint: authSecret.secretValueFromJson('auth_uri').toString(),
-      accessTokenEndpoint: authSecret.secretValueFromJson('token_uri').toString(),
-      introspectEndpoint: authSecret.secretValueFromJson('token_uri').toString(),
-      pingEndSessionEndpoint: authSecret.secretValueFromJson('token_uri').toString(),
+      authEndpoint: authUrl,
+      accessTokenEndpoint: tokenUrl,
+      introspectEndpoint: tokenUrl,
+      pingEndSessionEndpoint: tokenUrl,
       redirectPathSignIn: '/parseauth',
       redirectPathSignOut: '/',
       signOutUrl: '/signout',
@@ -278,6 +282,7 @@ export class AppStack extends cdk.Stack {
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
+      edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
     const cloudfrontParseAuthFnArn = (new LambdaCodeUpdate(this, 'CloudfrontParseAuthFn', {
@@ -285,6 +290,7 @@ export class AppStack extends cdk.Stack {
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
+      edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
     const cloudfrontRefreshAuthFnArn = (new LambdaCodeUpdate(this, 'CloudfrontRefreshAuthFn', {
@@ -292,6 +298,7 @@ export class AppStack extends cdk.Stack {
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
+      edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
     const cloudfrontSignOutFnArn = (new LambdaCodeUpdate(this, 'CloudfrontSignOutFn', {
@@ -299,6 +306,7 @@ export class AppStack extends cdk.Stack {
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
+      edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
     const cloudfrontRewriteTrailingSlashFnArn = (new LambdaCodeUpdate(this, 'CloudfrontRewriteTrailingSlashFn', {
@@ -306,6 +314,7 @@ export class AppStack extends cdk.Stack {
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
+      edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
     const cloudfrontHttpHeadersFnArn = (new LambdaCodeUpdate(this, 'CloudfrontHttpHeadersFn', {
@@ -313,6 +322,7 @@ export class AppStack extends cdk.Stack {
       configuration: JSON.stringify(lambdaEdgeConfig),
       secretArn: authSecret.secretArn,
       version: Math.floor(Date.now() / 1000).toString(),
+      edgeLambdaName
     }).node.defaultChild as cdk.CustomResource).getAtt('FunctionArn').toString();
 
     var edgeLambdas: cloudfront.EdgeLambda[] = [{

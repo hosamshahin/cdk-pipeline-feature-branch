@@ -11,6 +11,7 @@ export interface LambdaCodeUpdateProps {
   readonly configuration: string;
   readonly secretArn: string;
   readonly version: string;
+  readonly edgeLambdaName: string;
 }
 
 export class LambdaCodeUpdate extends Construct {
@@ -19,13 +20,14 @@ export class LambdaCodeUpdate extends Construct {
     super(scope, id);
 
     new CustomResource(this, 'Resource', {
-      serviceToken: LambdaCodeUpdateProvider.getOrCreate(this),
+      serviceToken: LambdaCodeUpdateProvider.getOrCreate(this, props),
       resourceType: 'Custom::lambdaCodeUpdateProvider',
       properties: {
         lambdaFunction: props.lambdaFunction,
         configuration: props.configuration,
         secretArn: props.secretArn,
         version: props.version,
+        edgeLambdaName: props.edgeLambdaName
       },
     });
   }
@@ -35,17 +37,20 @@ class LambdaCodeUpdateProvider extends Construct {
   /**
    * Returns the singleton provider.
    */
-  public static getOrCreate(scope: Construct) {
+  public static getOrCreate(scope: Construct, props:LambdaCodeUpdateProps) {
     const providerId = 'lambdaCodeUpdateProvider';
     const stack = Stack.of(scope);
-    const group = Node.of(stack).tryFindChild(providerId) as LambdaCodeUpdateProvider || new LambdaCodeUpdateProvider(stack, providerId);
+    const group = Node.of(stack).tryFindChild(providerId) as LambdaCodeUpdateProvider || new LambdaCodeUpdateProvider(stack, providerId, props);
     return group.provider.serviceToken;
   }
 
   private readonly provider: cr.Provider;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props:LambdaCodeUpdateProps) {
     super(scope, id);
+
+    const currentAcct = cdk.Stack.of(this).account
+    const currentRegion = cdk.Stack.of(this).region
 
     const policyDocument = new iam.PolicyDocument({
       statements: [
@@ -56,13 +61,13 @@ class LambdaCodeUpdateProvider extends Construct {
             'lambda:UpdateFunctionCode',
           ],
           resources: [
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-check-auth-*`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-parse-auth-*`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-refresh-auth-*`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-sign-out-*`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-http-headers-*`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-trailing-slash-*`,
-            `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*-get-root-*`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-check-auth`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-parse-auth`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-refresh-auth`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-sign-out`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-http-headers`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-trailing-slash`,
+            `arn:${cdk.Aws.PARTITION}:lambda:${currentRegion}:${currentAcct}:function:${props.edgeLambdaName}-get-root`,
           ],
         }),
         new iam.PolicyStatement({
@@ -104,7 +109,7 @@ class LambdaCodeUpdateProvider extends Construct {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'bundle.onEvent',
       role: lambdaRole,
-      timeout: cdk.Duration.minutes(5),
+      timeout: cdk.Duration.minutes(15)
     });
 
     this.provider = new cr.Provider(this, 'lambdaCodeUpdateProvider', {
