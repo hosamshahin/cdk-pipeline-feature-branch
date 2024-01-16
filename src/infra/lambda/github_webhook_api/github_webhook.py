@@ -21,14 +21,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def verify_signature(data, github_secret, signature):
-    hmac_object = hmac.new(github_secret.encode('utf-8'),
-                           data.encode('utf-8'),
-                           hashlib.sha256)
-    calculated_signature = "sha256=" + hmac_object.hexdigest()
-
-    return hmac.compare_digest(calculated_signature, signature)
-
 def get_github_webhook_secret_from_secretsmanager(github_webhook_secret):
     response = sm_client.get_secret_value(
         SecretId=github_webhook_secret,
@@ -44,14 +36,14 @@ def branch_name_check(branch_name, branch_prefix):
     else:
         return False
 
-
-def verify_webhook(secret, data, hmac_header):
-    received_hmac = re.sub(r"^sha256=", "", hmac_header)
-    hexdigest = hmac.new(
-        secret.encode("utf-8"), data.encode("utf-8"), hashlib.sha256
-    ).hexdigest()
-    return hexdigest == received_hmac
-
+def verify_signature(payload_body, secret_token, signature_header):
+    hash_object = hmac.new(secret_token.encode('utf-8'),
+                           msg=payload_body.encode('utf-8'),
+                           digestmod=hashlib.sha256)
+    expected_signature = "sha256=" + hash_object.hexdigest()
+    print(expected_signature)
+    print(signature_header)
+    return hmac.compare_digest(expected_signature, signature_header)
 
 def save_branch_name_in_ssm(branch_name):
     branch_chars = re.sub("[^0-9a-zA-Z-]+", "", str(branch_name))
@@ -151,7 +143,8 @@ def delete_stack(branch_name, pipeline_template, dev_account):
 
 def handler(event, context):
     logger.info(json.dumps(event))
-    body = json.loads(event.get("body", {}))
+    body_string = event.get("body")
+    body = json.loads(body_string)
     headers = event.get("headers", {})
     event_type = headers['X-GitHub-Event']
     signature = headers['X-Hub-Signature-256']
@@ -161,7 +154,7 @@ def handler(event, context):
 
     msg = ""
     try:
-        if ref_type == "branch":
+        if ref_type == "branch" and verify_signature(body_string, github_secret, signature):
             branch_name = ref
             # create pipeline and app
             if event_type == 'push':
