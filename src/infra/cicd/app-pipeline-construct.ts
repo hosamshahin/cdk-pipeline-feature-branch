@@ -38,7 +38,8 @@ export class Pipeline extends Construct {
         input,
         commands: [
           "npm install projen",
-          "npx cdk synth -c TargetStack=Pipeline",
+          "cd $CODEBUILD_SRC_DIR/src/infra/lambda/app/auth && npm install --omit=dev",
+          "cd $CODEBUILD_SRC_DIR && npx cdk synth -c TargetStack=Pipeline",
         ],
       })
     });
