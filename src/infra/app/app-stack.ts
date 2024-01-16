@@ -219,6 +219,14 @@ export class AppStack extends cdk.Stack {
           functionVersion: alias.version,
           includeBody: false,
         }]
+      },
+      additionalBehaviors: {
+        "/uploads/*": {
+          origin: new cloudfrontOrigins.S3Origin(this.bucket, {
+            originPath: "/",
+          }),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        },
       }
     });
 
