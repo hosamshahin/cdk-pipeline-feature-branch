@@ -15,12 +15,9 @@ import { Trigger } from 'aws-cdk-lib/triggers';
 import { Construct } from 'constructs';
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct';
 
-export enum LogLevel {
-  NONE = 'none',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  DEBUG = 'debug',
+export interface AppStackProps {
+  edgeLambdaName?: string | 'CloudfrontAuth';
+  useRdsDataBase?: boolean | false;
 }
 
 export class AppStack extends cdk.Stack {
@@ -36,15 +33,16 @@ export class AppStack extends cdk.Stack {
 
   constructor(scope: Construct,
     id: string,
-    edgeLambdaNameParam?: string,
-    props?: cdk.StackProps) {
-    super(scope, id, props);
+    props?: AppStackProps,
+    stackProps?: cdk.StackProps) {
+    super(scope, id, stackProps);
 
     const config: any = this.node.tryGetContext('config') || {};
     const accounts = config.accounts || {};
     const currentAcct = cdk.Stack.of(this).account;
-    const webhookAPILambdaRole = config.resourceAttr.webhookAPILambdaRole;
-    let frontEndCodeBuildStepRole = config.resourceAttr.frontEndCodeBuildStepRole;
+    const resourceAttr = config['resourceAttr'] || {};
+    const webhookAPILambdaRole = resourceAttr['webhookAPILambdaRole'] || {};
+    let frontEndCodeBuildStepRole = resourceAttr['frontEndCodeBuildStepRole'];
     frontEndCodeBuildStepRole = currentAcct == accounts.DEV_ACCOUNT_ID ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`;
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
@@ -195,10 +193,8 @@ export class AppStack extends cdk.Stack {
       },
     });
 
-    let edgeLambdaName = edgeLambdaNameParam || 'CloudfrontAuth';
-
-    let cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
-      functionName: `${edgeLambdaName}-cloudfrontAuth`,
+    const cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
+      functionName: `${props!.edgeLambdaName}-cloudfrontAuth`,
       entry: require.resolve('../lambda/app/auth/auth.js'),
       role: cloudfrontAuthRole,
       timeout: cdk.Duration.seconds(5),
@@ -327,7 +323,7 @@ export class AppStack extends cdk.Stack {
     // 2- Push the client artifacts to dev/prod s3 bucket
     // 3- invalidate CloudFront cache in dev/prod accounts
     new iam.Role(this, 'adminRoleFromCicdAccount', {
-      roleName: config.resourceAttr.adminRoleFromCicdAccount,
+      roleName: resourceAttr['adminRoleFromCicdAccount'],
       assumedBy: new iam.CompositePrincipal(
         new iam.ArnPrincipal(`arn:aws:iam::${accounts.CICD_ACCOUNT_ID}:role/${webhookAPILambdaRole}`),
         new iam.ArnPrincipal(`arn:aws:iam::${accounts.CICD_ACCOUNT_ID}:role/${frontEndCodeBuildStepRole}`),
@@ -339,36 +335,38 @@ export class AppStack extends cdk.Stack {
       ],
     });
 
-    const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config.resourceAttr.databaseSecretArn));
-    const vpcId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.databaseVpcId);
-    const vpc = ec2.Vpc.fromLookup(this, 'VPC', { vpcId });
-    const securityGroupId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.migrationRunnerSecurityGroupId);
-    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId);
+    if (props!.useRdsDataBase) {
+      const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config.resourceAttr.databaseSecretArn));
+      const vpcId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.databaseVpcId);
+      const vpc = ec2.Vpc.fromLookup(this, 'VPC', { vpcId });
+      const securityGroupId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.migrationRunnerSecurityGroupId);
+      const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId);
 
-    const conn: DatabaseConnectionProps = {
-      host: databaseSecret.secretValueFromJson('host').toString(),
-      port: databaseSecret.secretValueFromJson('port').toString(),
-      engine: databaseSecret.secretValueFromJson('engine').toString(),
-      username: databaseSecret.secretValueFromJson('username').toString(),
-      password: databaseSecret.secretValueFromJson('password').toString(),
-    };
+      const conn: DatabaseConnectionProps = {
+        host: databaseSecret.secretValueFromJson('host').toString(),
+        port: databaseSecret.secretValueFromJson('port').toString(),
+        engine: databaseSecret.secretValueFromJson('engine').toString(),
+        username: databaseSecret.secretValueFromJson('username').toString(),
+        password: databaseSecret.secretValueFromJson('password').toString(),
+      };
 
-    const migrationRunner = new DockerPrismaFunction(this, 'DockerMigrationRunner', {
-      code: lambda.DockerImageCode.fromImageAsset(
-        './src/infra/lambda/prisma', {
+      const migrationRunner = new DockerPrismaFunction(this, 'DockerMigrationRunner', {
+        code: lambda.DockerImageCode.fromImageAsset(
+          './src/infra/lambda/prisma', {
           cmd: ['migration-runner.handler'],
           platform: Platform.LINUX_AMD64,
         }),
-      memorySize: 256,
-      timeout: cdk.Duration.minutes(1),
-      vpc,
-      securityGroups: [securityGroup],
-      conn,
-    });
+        memorySize: 256,
+        timeout: cdk.Duration.minutes(1),
+        vpc,
+        securityGroups: [securityGroup],
+        conn,
+      });
 
-    // run database migration during CDK deployment
-    new Trigger(this, 'MigrationTrigger', {
-      handler: migrationRunner,
-    });
+      // run database migration during CDK deployment
+      new Trigger(this, 'MigrationTrigger', {
+        handler: migrationRunner,
+      });
+    }
   }
 }

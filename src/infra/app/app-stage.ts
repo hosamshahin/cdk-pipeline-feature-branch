@@ -14,7 +14,7 @@ export class AppStage extends cdk.Stage {
   constructor(scope: Construct, id: string, props?: cdk.StageProps) {
     super(scope, id, props);
 
-    const appStack = new AppStack(this, 'AppStack', 'CloudfrontAuth', props);
+    const appStack = new AppStack(this, 'AppStack', {}, props);
 
     this.cfnOutApiImagesUrl = appStack.cfnOutApiImagesUrl;
     this.cfnOutCloudFrontUrl = appStack.cfnOutCloudFrontUrl;

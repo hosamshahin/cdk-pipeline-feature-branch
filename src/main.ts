@@ -13,8 +13,9 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
-const config = app.node.tryGetContext('config');
-const dbPipelineBranch = config.resourceAttr.dbPipelineBranch;
+const config = app.node.tryGetContext('config') || {};
+const resourceAttr = config['resourceAttr'] ||{}
+const dbPipelineBranch = resourceAttr['dbPipelineBranch'];
 
 const targetStack = app.node.tryGetContext('TargetStack');
 
@@ -77,7 +78,7 @@ if (targetStack == 'PrismaStack') {
 }
 
 if (targetStack == 'AppStack') {
-  new AppStack(app, 'AppStack', 'CloudfrontAuth', { env });
+  new AppStack(app, 'AppStack', {}, { env });
 }
 
 app.synth();

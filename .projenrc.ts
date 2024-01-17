@@ -63,7 +63,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     dirs: [
       'coverage',
       'node_modules',
-    ]
-  }
+    ],
+  },
 });
 project.synth();
