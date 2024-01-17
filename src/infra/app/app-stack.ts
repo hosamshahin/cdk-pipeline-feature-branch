@@ -1,19 +1,19 @@
-import * as cdk from "aws-cdk-lib";
-import { Construct } from "constructs";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as cloudfrontOrigins from "aws-cdk-lib/aws-cloudfront-origins";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
+import * as cdk from 'aws-cdk-lib';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import { Platform } from "aws-cdk-lib/aws-ecr-assets";
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sm from 'aws-cdk-lib/aws-secretsmanager';
-import { Trigger } from "aws-cdk-lib/triggers";
-import * as ssm from "aws-cdk-lib/aws-ssm";
-import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct'
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { Trigger } from 'aws-cdk-lib/triggers';
+import { Construct } from 'constructs';
+import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct';
 
 export enum LogLevel {
   NONE = 'none',
@@ -40,24 +40,24 @@ export class AppStack extends cdk.Stack {
     props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const config = this.node.tryGetContext("config")
-    const accounts = config['accounts']
-    const currentAcct = cdk.Stack.of(this).account
-    const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
-    let frontEndCodeBuildStepRole = config['resourceAttr']['frontEndCodeBuildStepRole']
-    frontEndCodeBuildStepRole = currentAcct == accounts['DEV_ACCOUNT_ID'] ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`
+    const config: any = this.node.tryGetContext('config') || {};
+    const accounts = config.accounts || {};
+    const currentAcct = cdk.Stack.of(this).account;
+    const webhookAPILambdaRole = config.resourceAttr.webhookAPILambdaRole;
+    let frontEndCodeBuildStepRole = config.resourceAttr.frontEndCodeBuildStepRole;
+    frontEndCodeBuildStepRole = currentAcct == accounts.DEV_ACCOUNT_ID ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`;
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
-    this.bucket = new s3.Bucket(this, "Bucket", {
+    this.bucket = new s3.Bucket(this, 'Bucket', {
       enforceSSL: true,
       cors: [
         {
           allowedMethods: [s3.HttpMethods.POST],
-          allowedOrigins: ["*"],
+          allowedOrigins: ['*'],
         },
       ],
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true
+      autoDeleteObjects: true,
     });
 
     this.bucket.addToResourcePolicy(
@@ -70,13 +70,13 @@ export class AppStack extends cdk.Stack {
         principals: [new iam.AnyPrincipal()],
         conditions: {
           StringEquals: {
-            'aws:PrincipalAccount': accounts['CICD_ACCOUNT_ID'],
+            'aws:PrincipalAccount': accounts.CICD_ACCOUNT_ID,
           },
         },
         effect: iam.Effect.ALLOW,
         resources: [`${this.bucket.bucketArn}/*`],
-      })
-    )
+      }),
+    );
 
     /**
      * CloudFront Distribution and lambda edge
@@ -191,15 +191,15 @@ export class AppStack extends cdk.Stack {
         cloudfrontReadOnlyAccessPolicyDocument: cloudfrontReadOnlyAccessPolicyDocument,
         lambdaReadOnlyAccessPolicyDocument: lambdaReadOnlyAccessPolicyDocument,
         lambdaBasicExecutionRolePolicyDocument: lambdaBasicExecutionRolePolicyDocument,
-        policyDocument: policyDocument
+        policyDocument: policyDocument,
       },
     });
 
     let edgeLambdaName = edgeLambdaNameParam || 'CloudfrontAuth';
 
-    let cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, "CloudfrontAuthFunction", {
+    let cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
       functionName: `${edgeLambdaName}-cloudfrontAuth`,
-      entry: require.resolve("../lambda/app/auth/auth.js"),
+      entry: require.resolve('../lambda/app/auth/auth.js'),
       role: cloudfrontAuthRole,
       timeout: cdk.Duration.seconds(5),
     });
@@ -207,47 +207,47 @@ export class AppStack extends cdk.Stack {
     const version = cloudfrontAuthFunction.currentVersion;
     const alias = new lambda.Alias(this, 'LambdaAlias', { aliasName: 'Current', version });
 
-    this.distribution = new cloudfront.Distribution(this, "Distribution", {
-      defaultRootObject: "index.html",
+    this.distribution = new cloudfront.Distribution(this, 'Distribution', {
+      defaultRootObject: 'index.html',
       defaultBehavior: {
         origin: new cloudfrontOrigins.S3Origin(this.bucket, {
-          originPath: "/frontend",
+          originPath: '/frontend',
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         edgeLambdas: [{
           eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
           functionVersion: alias.version,
           includeBody: false,
-        }]
+        }],
       },
       additionalBehaviors: {
-        "/uploads/*": {
+        '/uploads/*': {
           origin: new cloudfrontOrigins.S3Origin(this.bucket, {
-            originPath: "/",
+            originPath: '/',
           }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
-      }
+      },
     });
 
-    this.cfnOutCloudFrontUrl = new cdk.CfnOutput(this, "CfnOutCloudFrontUrl", {
+    this.cfnOutCloudFrontUrl = new cdk.CfnOutput(this, 'CfnOutCloudFrontUrl', {
       value: `https://${this.distribution.distributionDomainName}`,
-      description: "URL for CLOUDFRONT_URL in `frontend/.env` file",
+      description: 'URL for CLOUDFRONT_URL in `frontend/.env` file',
     });
 
-    this.cfnOutDistributionId = new cdk.CfnOutput(this, "CfnOutDistributionId", {
+    this.cfnOutDistributionId = new cdk.CfnOutput(this, 'CfnOutDistributionId', {
       value: this.distribution.distributionId,
-      description: "CloudFront Distribution Id",
+      description: 'CloudFront Distribution Id',
     });
 
-    this.cfnOutBucketName = new cdk.CfnOutput(this, "CfnOutBucketName", {
+    this.cfnOutBucketName = new cdk.CfnOutput(this, 'CfnOutBucketName', {
       value: this.bucket.bucketName,
-      description: "Website Hosting Bucket Name",
+      description: 'Website Hosting Bucket Name',
     });
 
-    this.cfnOutBucketArn = new cdk.CfnOutput(this, "cfnOutBucketArn", {
+    this.cfnOutBucketArn = new cdk.CfnOutput(this, 'cfnOutBucketArn', {
       value: this.bucket.bucketArn,
-      description: "Website Hosting Bucket Name",
+      description: 'Website Hosting Bucket Name',
     });
 
     const likesTable = new dynamo.Table(this, 'LikesTable', {
@@ -258,46 +258,46 @@ export class AppStack extends cdk.Stack {
       },
     });
 
-    let lambdaApiHandlerPublic = new lambdaNodeJs.NodejsFunction(this, "ApiHandlerPublic", {
-      entry: require.resolve("../lambda/app/coffee-listing-api-public"),
+    let lambdaApiHandlerPublic = new lambdaNodeJs.NodejsFunction(this, 'ApiHandlerPublic', {
+      entry: require.resolve('../lambda/app/coffee-listing-api-public'),
       environment: {
         BUCKET_NAME: this.bucket.bucketName,
-        BUCKER_UPLOAD_FOLDER_NAME: "uploads",
+        BUCKER_UPLOAD_FOLDER_NAME: 'uploads',
       },
     });
 
     this.bucket.grantReadWrite(lambdaApiHandlerPublic);
 
-    let lambdaApiHandlerPrivate = new lambdaNodeJs.NodejsFunction(this, "ApiHandlerPrivate", {
-      entry: require.resolve("../lambda/app/coffee-listing-api-private"),
+    let lambdaApiHandlerPrivate = new lambdaNodeJs.NodejsFunction(this, 'ApiHandlerPrivate', {
+      entry: require.resolve('../lambda/app/coffee-listing-api-private'),
       environment: {
         DYNAMODB_TABLE_LIKES_NAME: likesTable.tableName,
-      }
+      },
     });
 
     lambdaApiHandlerPrivate.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ["dynamodb:Query", "dynamodb:UpdateItem"],
+        actions: ['dynamodb:Query', 'dynamodb:UpdateItem'],
         resources: [likesTable.tableArn],
-      })
+      }),
     );
 
-    let restApi = new apigateway.LambdaRestApi(this, "RestApi", {
+    let restApi = new apigateway.LambdaRestApi(this, 'RestApi', {
       handler: lambdaApiHandlerPublic,
       proxy: false,
     });
 
-    let apiImages = restApi.root.addResource("images", {
+    let apiImages = restApi.root.addResource('images', {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
       },
     });
 
-    apiImages.addMethod("GET");
-    apiImages.addMethod("POST");
+    apiImages.addMethod('GET');
+    apiImages.addMethod('POST');
 
-    let apiLikes = restApi.root.addResource("likes", {
+    let apiLikes = restApi.root.addResource('likes', {
       defaultIntegration: new apigateway.LambdaIntegration(lambdaApiHandlerPrivate),
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
@@ -305,21 +305,21 @@ export class AppStack extends cdk.Stack {
       },
     });
 
-    apiLikes.addMethod("POST");
+    apiLikes.addMethod('POST');
 
-    let apiLikesImage = apiLikes.addResource("{imageKeyS3}");
-    apiLikesImage.addMethod("GET");
+    let apiLikesImage = apiLikes.addResource('{imageKeyS3}');
+    apiLikesImage.addMethod('GET');
 
     this.restApi = restApi;
 
-    this.cfnOutApiLikesUrl = new cdk.CfnOutput(this, "CfnOutApiLikesUrl", {
-      value: restApi.urlForPath("/likes"),
-      description: "Likes API URL for `frontend/.env` file",
+    this.cfnOutApiLikesUrl = new cdk.CfnOutput(this, 'CfnOutApiLikesUrl', {
+      value: restApi.urlForPath('/likes'),
+      description: 'Likes API URL for `frontend/.env` file',
     });
 
-    this.cfnOutApiImagesUrl = new cdk.CfnOutput(this, "CfnOutApiImagesUrl", {
-      value: restApi.urlForPath("/images"),
-      description: "Images API URL for `frontend/.env` file",
+    this.cfnOutApiImagesUrl = new cdk.CfnOutput(this, 'CfnOutApiImagesUrl', {
+      value: restApi.urlForPath('/images'),
+      description: 'Images API URL for `frontend/.env` file',
     });
 
     // CICD pipeline will assume this role to perform the follwoing actions
@@ -327,47 +327,47 @@ export class AppStack extends cdk.Stack {
     // 2- Push the client artifacts to dev/prod s3 bucket
     // 3- invalidate CloudFront cache in dev/prod accounts
     new iam.Role(this, 'adminRoleFromCicdAccount', {
-      roleName: config['resourceAttr']['adminRoleFromCicdAccount'],
+      roleName: config.resourceAttr.adminRoleFromCicdAccount,
       assumedBy: new iam.CompositePrincipal(
-        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${webhookAPILambdaRole}`),
-        new iam.ArnPrincipal(`arn:aws:iam::${accounts['CICD_ACCOUNT_ID']}:role/${frontEndCodeBuildStepRole}`)
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts.CICD_ACCOUNT_ID}:role/${webhookAPILambdaRole}`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accounts.CICD_ACCOUNT_ID}:role/${frontEndCodeBuildStepRole}`),
       ),
       description: 'Role to grant access to target accounts',
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('CloudFrontFullAccess'),
-      ]
+      ],
     });
 
-    const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config['resourceAttr']['databaseSecretArn']));
-    const vpcId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['databaseVpcId']);
-    const vpc = ec2.Vpc.fromLookup(this, "VPC", { vpcId });
-    const securityGroupId = ssm.StringParameter.valueFromLookup(this, config['resourceAttr']['migrationRunnerSecurityGroupId']);
-    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId)
+    const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config.resourceAttr.databaseSecretArn));
+    const vpcId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.databaseVpcId);
+    const vpc = ec2.Vpc.fromLookup(this, 'VPC', { vpcId });
+    const securityGroupId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.migrationRunnerSecurityGroupId);
+    const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId);
 
     const conn: DatabaseConnectionProps = {
-      host: databaseSecret.secretValueFromJson("host").toString(),
-      port: databaseSecret.secretValueFromJson("port").toString(),
-      engine: databaseSecret.secretValueFromJson("engine").toString(),
-      username: databaseSecret.secretValueFromJson("username").toString(),
-      password: databaseSecret.secretValueFromJson("password").toString(),
-    }
+      host: databaseSecret.secretValueFromJson('host').toString(),
+      port: databaseSecret.secretValueFromJson('port').toString(),
+      engine: databaseSecret.secretValueFromJson('engine').toString(),
+      username: databaseSecret.secretValueFromJson('username').toString(),
+      password: databaseSecret.secretValueFromJson('password').toString(),
+    };
 
-    const migrationRunner = new DockerPrismaFunction(this, "DockerMigrationRunner", {
+    const migrationRunner = new DockerPrismaFunction(this, 'DockerMigrationRunner', {
       code: lambda.DockerImageCode.fromImageAsset(
         './src/infra/lambda/prisma', {
-        cmd: ["migration-runner.handler"],
-        platform: Platform.LINUX_AMD64,
-      }),
+          cmd: ['migration-runner.handler'],
+          platform: Platform.LINUX_AMD64,
+        }),
       memorySize: 256,
       timeout: cdk.Duration.minutes(1),
       vpc,
       securityGroups: [securityGroup],
-      conn
+      conn,
     });
 
     // run database migration during CDK deployment
-    new Trigger(this, "MigrationTrigger", {
+    new Trigger(this, 'MigrationTrigger', {
       handler: migrationRunner,
     });
   }

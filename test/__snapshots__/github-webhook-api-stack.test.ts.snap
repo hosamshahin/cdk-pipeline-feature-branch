@@ -1,0 +1,473 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GithubWebhookAPIStack cdk-nag AwsSolutions Pack 1`] = `
+"Metadata:
+  cdk_nag:
+    rules_to_suppress:
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG3
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-IAM4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-L1
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-IAM5
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-COG4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG2
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG6
+Resources:
+  GithubSecretUUID86714E5C:
+    Type: Custom::GenerateUUIDProvider
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - GenerateUUIDProvideruuidproviderframeworkonEvent91D64D7B
+          - Arn
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+  GenerateUUIDProviderGenerateUUIDFunctionServiceRole09380989:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  GenerateUUIDProviderGenerateUUIDFunctionFA536270:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+        S3Key: bd3a83f9826522c5508282eb24519bc6a4f666aa754b91be0c2536c78de020fd.zip
+      Handler: generate_uuid.on_event
+      Role:
+        Fn::GetAtt:
+          - GenerateUUIDProviderGenerateUUIDFunctionServiceRole09380989
+          - Arn
+      Runtime: python3.8
+    DependsOn:
+      - GenerateUUIDProviderGenerateUUIDFunctionServiceRole09380989
+  GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleAC3856EC:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleDefaultPolicy7C423CE0:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - GenerateUUIDProviderGenerateUUIDFunctionFA536270
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - GenerateUUIDProviderGenerateUUIDFunctionFA536270
+                        - Arn
+                    - :*
+        Version: 2012-10-17
+      PolicyName: GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleDefaultPolicy7C423CE0
+      Roles:
+        - Ref: GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleAC3856EC
+  GenerateUUIDProvideruuidproviderframeworkonEvent91D64D7B:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+        S3Key: 7382a0addb9f34974a1ea6c6c9b063882af874828f366f5c93b2b7b64db15c94.zip
+      Description: AWS CDK resource provider framework - onEvent
+        (GithubWebhookAPIStack/GenerateUUIDProvider/uuid-provider)
+      Environment:
+        Variables:
+          USER_ON_EVENT_FUNCTION_ARN:
+            Fn::GetAtt:
+              - GenerateUUIDProviderGenerateUUIDFunctionFA536270
+              - Arn
+      Handler: framework.onEvent
+      Role:
+        Fn::GetAtt:
+          - GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleAC3856EC
+          - Arn
+      Runtime: nodejs18.x
+      Timeout: 900
+    DependsOn:
+      - GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleDefaultPolicy7C423CE0
+      - GenerateUUIDProvideruuidproviderframeworkonEventServiceRoleAC3856EC
+  generatorlambdaroleBCA1873F:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  generatorlambdaroleDefaultPolicy919786F3:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - ssm:PutParameter
+              - ssm:DeleteParameter
+              - ssm:GetParameter
+              - iam:PassRole
+              - secretsmanager:GetSecretValue
+              - codepipeline:CreatePipeline
+              - codepipeline:DeletePipeline
+              - codepipeline:ListPipelines
+              - codepipeline:GetPipeline
+              - codepipeline:UpdatePipeline
+              - codestar-connections:PassConnection
+            Effect: Allow
+            Resource: "*"
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource: arn:aws:iam::undefined:role/undefined
+        Version: 2012-10-17
+      PolicyName: generatorlambdaroleDefaultPolicy919786F3
+      Roles:
+        - Ref: generatorlambdaroleBCA1873F
+  githubWebhookApiHandlerBF3F2F1C:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+        S3Key: 3c5c33f38c920072af4f63729db96aa107655c61b7ff594642e52126833fec85.zip
+      Environment:
+        Variables:
+          pipelineTemplate: Pipeline-cicd
+          branchPrefix: ^(feature|bug|hotfix)-
+          featurePipelineSuffix: -FeatureBranchPipeline
+          githubSecretUUIDValue:
+            Fn::GetAtt:
+              - GithubSecretUUID86714E5C
+              - uuid
+      Handler: github_webhook.handler
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+          - generatorlambdaroleBCA1873F
+          - Arn
+      Runtime: python3.9
+      Timeout: 60
+    DependsOn:
+      - generatorlambdaroleDefaultPolicy919786F3
+      - generatorlambdaroleBCA1873F
+  GithubWebhookAPILogs2D1D1C03:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 731
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  GithubWebhookAPIStackapigateway57357A1D:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: GithubWebhookAPIStack-api-gateway
+  GithubWebhookAPIStackapigatewayCloudWatchRole674CDAB0:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  GithubWebhookAPIStackapigatewayAccount3B31E447:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - GithubWebhookAPIStackapigatewayCloudWatchRole674CDAB0
+          - Arn
+    DependsOn:
+      - GithubWebhookAPIStackapigateway57357A1D
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  GithubWebhookAPIStackapigatewayDeploymentB147B7F1eb8f8ee42639958248b668278b7cbe43:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Automatically created by the RestApi construct
+      RestApiId:
+        Ref: GithubWebhookAPIStackapigateway57357A1D
+    DependsOn:
+      - GithubWebhookAPIStackapigatewayOPTIONSF4DBF14C
+      - GithubWebhookAPIStackapigatewaywebhookOPTIONS619E8885
+      - GithubWebhookAPIStackapigatewaywebhookPOST1F93A4AF
+      - GithubWebhookAPIStackapigatewaywebhookDCAE53B0
+  GithubWebhookAPIStackapigatewayDeploymentStageprod39A954A1:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      AccessLogSetting:
+        DestinationArn:
+          Fn::GetAtt:
+            - GithubWebhookAPILogs2D1D1C03
+            - Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}'
+      DeploymentId:
+        Ref: GithubWebhookAPIStackapigatewayDeploymentB147B7F1eb8f8ee42639958248b668278b7cbe43
+      MethodSettings:
+        - DataTraceEnabled: false
+          HttpMethod: "*"
+          MetricsEnabled: true
+          ResourcePath: /*
+      RestApiId:
+        Ref: GithubWebhookAPIStackapigateway57357A1D
+      StageName: prod
+    DependsOn:
+      - GithubWebhookAPIStackapigatewayAccount3B31E447
+  GithubWebhookAPIStackapigatewayOPTIONSF4DBF14C:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
+                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Fn::GetAtt:
+          - GithubWebhookAPIStackapigateway57357A1D
+          - RootResourceId
+      RestApiId:
+        Ref: GithubWebhookAPIStackapigateway57357A1D
+  GithubWebhookAPIStackapigatewaywebhookDCAE53B0:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - GithubWebhookAPIStackapigateway57357A1D
+          - RootResourceId
+      PathPart: webhook
+      RestApiId:
+        Ref: GithubWebhookAPIStackapigateway57357A1D
+  GithubWebhookAPIStackapigatewaywebhookOPTIONS619E8885:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
+                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: GithubWebhookAPIStackapigatewaywebhookDCAE53B0
+      RestApiId:
+        Ref: GithubWebhookAPIStackapigateway57357A1D
+  GithubWebhookAPIStackapigatewaywebhookPOSTApiPermissionGithubWebhookAPIStackGithubWebhookAPIStackapigateway1D898C81POSTwebhookCEAA8DAA:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - githubWebhookApiHandlerBF3F2F1C
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: GithubWebhookAPIStackapigateway57357A1D
+            - /
+            - Ref: GithubWebhookAPIStackapigatewayDeploymentStageprod39A954A1
+            - /POST/webhook
+  GithubWebhookAPIStackapigatewaywebhookPOSTApiPermissionTestGithubWebhookAPIStackGithubWebhookAPIStackapigateway1D898C81POSTwebhookA5452BE8:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - githubWebhookApiHandlerBF3F2F1C
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: GithubWebhookAPIStackapigateway57357A1D
+            - /test-invoke-stage/POST/webhook
+  GithubWebhookAPIStackapigatewaywebhookPOST1F93A4AF:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - githubWebhookApiHandlerBF3F2F1C
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: GithubWebhookAPIStackapigatewaywebhookDCAE53B0
+      RestApiId:
+        Ref: GithubWebhookAPIStackapigateway57357A1D
+Outputs:
+  secretuuid:
+    Value:
+      Fn::GetAtt:
+        - GithubSecretUUID86714E5C
+        - uuid
+    Export:
+      Name: githubSecretUUIDValue
+  githubwebhookapihandlerlambdaarn:
+    Value:
+      Fn::GetAtt:
+        - githubWebhookApiHandlerBF3F2F1C
+        - Arn
+    Export:
+      Name: github-webhook-api-handler-lambda-arn
+  GithubWebhookAPIStackapigatewayEndpoint44433584:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: GithubWebhookAPIStackapigateway57357A1D
+          - .execute-api.
+          - Ref: AWS::Region
+          - .
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: GithubWebhookAPIStackapigatewayDeploymentStageprod39A954A1
+          - /
+  apigatewaydomainarn:
+    Value:
+      Fn::Join:
+        - ""
+        - - "arn:"
+          - Ref: AWS::Partition
+          - ":execute-api:"
+          - Ref: AWS::Region
+          - ":"
+          - Ref: AWS::AccountId
+          - ":"
+          - Ref: GithubWebhookAPIStackapigateway57357A1D
+          - /*/*/*
+    Export:
+      Name: api-gateway-domain-arn
+  webhookurl:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: GithubWebhookAPIStackapigateway57357A1D
+          - .execute-api.us-east-1.amazonaws.com/prod/webhook
+    Export:
+      Name: webhook-url
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment,
+      automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk
+          bootstrap' with a recent version of the CDK CLI.
+"
+`;

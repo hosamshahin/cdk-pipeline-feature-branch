@@ -11,45 +11,59 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   buildWorkflow: false,
   release: false,
   sampleCode: false,
-  deps:[
+  deps: [
     'ts-deepmerge@^6.0.2',
     'deep-diff@^1.0.2',
-    'npmlog@^4.1.2'
+    'npmlog@^4.1.2',
   ],
   devDeps: [
     '@types/npmlog@^4.1.4',
     '@types/deep-diff@^1.0.2',
-    'cdk-nag@2.23.2'
+    'cdk-nag@2.23.2',
+    'yaml',
   ],
   context: {
-    "config": {
-      "githubOrg": "hosamshahin",
-      "githubRepo": "cdk-pipeline-feature-branch",
-      "githubBranch": "main",
-      "region": "us-east-1",
-      "connection_arn": "arn:aws:codestar-connections:us-east-1:690901106489:connection/947df6a7-dcd6-4c05-a53c-1173466436d3",
-      "accounts": {
-        "CICD_ACCOUNT_ID": "690901106489",
-        "DEV_ACCOUNT_ID": "864571753663",
-        "STG_ACCOUNT_ID": "787236266800",
-        "PRD_ACCOUNT_ID": "938711853848"
+    config: {
+      githubOrg: 'hosamshahin',
+      githubRepo: 'cdk-pipeline-feature-branch',
+      githubBranch: 'main',
+      region: 'us-east-1',
+      connection_arn: 'arn:aws:codestar-connections:us-east-1:690901106489:connection/947df6a7-dcd6-4c05-a53c-1173466436d3',
+      accounts: {
+        CICD_ACCOUNT_ID: '690901106489',
+        DEV_ACCOUNT_ID: '864571753663',
+        STG_ACCOUNT_ID: '787236266800',
+        PRD_ACCOUNT_ID: '938711853848',
       },
-      "resourceAttr": {
-        "defaultDBName": "postgres",
-        "crossAccountLambdaRole": "crossAccountLambdaRole",
-        "schemaMigrationFnName": "RDSSchemaMigrationFunction",
-        "migrationRunnerSecurityGroupId": "/database/SecurityGroupId",
-        "migrationRunnerName": "migrationRunner",
-        "databaseSecretArn": "databaseSecretArn",
-        "databaseVpcId": "/database/VpcId",
-        "adminRoleFromCicdAccount": "adminRoleFromCicdAccount",
-        "webhookAPILambdaRole": "webhookAPILambdaRole",
-        "frontEndCodeBuildStepRole": "frontEndCodeBuildStepRole",
-        "dbPipelineBranch": "dbPipelineBranch",
-        "authSecretName": "authSecret"
-      }
-    }
+      resourceAttr: {
+        defaultDBName: 'postgres',
+        crossAccountLambdaRole: 'crossAccountLambdaRole',
+        schemaMigrationFnName: 'RDSSchemaMigrationFunction',
+        migrationRunnerSecurityGroupId: '/database/SecurityGroupId',
+        migrationRunnerName: 'migrationRunner',
+        databaseSecretArn: 'databaseSecretArn',
+        databaseVpcId: '/database/VpcId',
+        adminRoleFromCicdAccount: 'adminRoleFromCicdAccount',
+        webhookAPILambdaRole: 'webhookAPILambdaRole',
+        frontEndCodeBuildStepRole: 'frontEndCodeBuildStepRole',
+        dbPipelineBranch: 'dbPipelineBranch',
+        authSecretName: 'authSecret',
+      },
+    },
+  },
+  jestOptions: {
+    updateSnapshot: javascript.UpdateSnapshot.NEVER,
+  },
+  eslintOptions: {
+    ignorePatterns: [
+      '*.js',
+      '*.d.ts',
+      '*.generated.ts',
+    ],
+    dirs: [
+      'coverage',
+      'node_modules',
+    ]
   }
-
 });
 project.synth();

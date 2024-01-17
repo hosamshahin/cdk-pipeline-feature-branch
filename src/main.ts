@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
+import { AppStack } from './infra/app/app-stack';
 import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
-import { BootstrapAdminRole } from './infra/shared/bootstrap-cross-account-admin-role';
+import { PrismaStack } from './infra/cicd/prisma-stack';
 import { AuthSecret } from './infra/shared/bootstrap-cross-account-auth-secret';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
-import { PrismaStack } from './infra/cicd/prisma-stack';
-import { AppStack } from './infra/app/app-stack';
 
 const app = new cdk.App();
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION
-}
+  region: process.env.CDK_DEFAULT_REGION,
+};
 
-const config = app.node.tryGetContext("config")
-const dbPipelineBranch = config['resourceAttr']['dbPipelineBranch']
+const config = app.node.tryGetContext('config');
+const dbPipelineBranch = config.resourceAttr.dbPipelineBranch;
 
 const targetStack = app.node.tryGetContext('TargetStack');
 
@@ -65,12 +64,8 @@ if (targetStack == 'DBPipeline') {
   });
 }
 
-if (targetStack == 'BootstrapAdminRole') {
-  new BootstrapAdminRole(app, 'BootstrapAdminRole', { env })
-}
-
 if (targetStack == 'AuthSecret') {
-  new AuthSecret(app, 'AuthSecret', { env })
+  new AuthSecret(app, 'AuthSecret', { env });
 }
 
 if (targetStack == 'GithubWebhookAPIStack') {

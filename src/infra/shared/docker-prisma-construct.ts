@@ -1,5 +1,5 @@
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import { Construct } from "constructs";
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { Construct } from 'constructs';
 
 export interface DatabaseConnectionProps {
   host: string;

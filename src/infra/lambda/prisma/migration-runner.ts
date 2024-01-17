@@ -1,19 +1,19 @@
-import { Handler } from "aws-lambda";
-import { execFile } from "child_process";
-import path from "path";
+import { execFile } from 'child_process';
+import path from 'path';
+import { Handler } from 'aws-lambda';
 
 export const handler: Handler = async (event, _) => {
   // Available commands are:
   //   deploy: create new database if absent and apply all migrations to the existing database.
   //   reset: delete existing database, create new one, and apply all migrations. NOT for production environment.
   // If you want to add commands, please refer to: https://www.prisma.io/docs/concepts/components/prisma-migrate
-  const command: string = event.command ?? "deploy";
+  const command: string = event.command ?? 'deploy';
 
   let options: string[] = [];
 
-  if (command == "reset") {
+  if (command == 'reset') {
     // skip confirmation and code generation
-    options = ["--force", "--skip-generate"];
+    options = ['--force', '--skip-generate'];
   }
 
   // Currently we don't have any direct method to invoke prisma migration programmatically.
@@ -22,8 +22,8 @@ export const handler: Handler = async (event, _) => {
   try {
     const exitCode = await new Promise((resolve, _) => {
       execFile(
-        path.resolve("./node_modules/prisma/build/index.js"),
-        ["migrate", command].concat(options),
+        path.resolve('./node_modules/prisma/build/index.js'),
+        ['migrate', command].concat(options),
         (error, stdout, stderr) => {
           console.log(stdout);
           if (error != null) {

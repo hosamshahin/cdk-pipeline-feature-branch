@@ -1,20 +1,20 @@
-import { Handler } from "aws-lambda";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
+import { Handler } from 'aws-lambda';
 
 const prisma = new PrismaClient({
-  log: ["query", "info", `warn`, `error`],
+  log: ['query', 'info', 'warn', 'error'],
 });
 
 export const handler: Handler = async (event, context) => {
   console.log(event);
   console.log(context);
-  const command: string = event.command ?? "create";
+  const command: string = event.command ?? 'create';
 
   switch (command) {
-    case "create":
+    case 'create':
       return await prisma.request.create({ data: { awsRequestId: context.awsRequestId } });
     default:
-    case "get":
+    case 'get':
       return await prisma.request.findMany();
   }
 };

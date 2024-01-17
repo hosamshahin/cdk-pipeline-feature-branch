@@ -1,37 +1,35 @@
 import * as cdk from 'aws-cdk-lib';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import { GenerateUUID } from './generate-uuid';
 import { Construct } from 'constructs';
+import { GenerateUUID } from './generate-uuid';
 
 export class GithubWebhookAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-
 
     const githubSecretUUID = new GenerateUUID(this, 'GithubSecretUUID').node.defaultChild as cdk.CustomResource;
     const githubSecretUUIDValue = githubSecretUUID.getAtt('uuid').toString();
 
     new cdk.CfnOutput(this, 'secret-uuid', {
       exportName: 'githubSecretUUIDValue',
-      value: githubSecretUUIDValue
+      value: githubSecretUUIDValue,
     });
 
-    const config = this.node.tryGetContext("config")
-    const accounts = config['accounts']
-    const adminRoleFromCicdAccount = config['resourceAttr']['adminRoleFromCicdAccount']
-    const webhookAPILambdaRole = config['resourceAttr']['webhookAPILambdaRole']
-
+    const config: any = this.node.tryGetContext('config') || {};
+    const accounts = config.accounts || {};
+    const resourceAttr = config.resourceAttr || {};
+    const adminRoleFromCicdAccount = resourceAttr.adminRoleFromCicdAccount;
+    const webhookAPILambdaRole = resourceAttr.webhookAPILambdaRole;
 
     const handlerRole = new iam.Role(this, 'generator-lambda-role', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       roleName: webhookAPILambdaRole,
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-      ]
+      ],
     });
 
     handlerRole.addToPolicy(
@@ -57,7 +55,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole'],
         resources: [
-          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/${adminRoleFromCicdAccount}`
+          `arn:aws:iam::${accounts.DEV_ACCOUNT_ID}:role/${adminRoleFromCicdAccount}`,
         ],
       }),
     );
@@ -72,16 +70,16 @@ export class GithubWebhookAPIStack extends cdk.Stack {
         pipelineTemplate: 'Pipeline-cicd',
         branchPrefix: '^(feature|bug|hotfix)-',
         featurePipelineSuffix: '-FeatureBranchPipeline',
-        devAccount: accounts['DEV_ACCOUNT_ID'],
-        githubSecretUUIDValue
+        devAccount: accounts.DEV_ACCOUNT_ID,
+        githubSecretUUIDValue,
       },
       memorySize: 1024,
       timeout: cdk.Duration.minutes(1),
     });
 
-    new cdk.CfnOutput(this, `github-webhook-api-handler-lambda-arn`, {
+    new cdk.CfnOutput(this, 'github-webhook-api-handler-lambda-arn', {
       value: githubHandler.functionArn,
-      exportName: `github-webhook-api-handler-lambda-arn`,
+      exportName: 'github-webhook-api-handler-lambda-arn',
     });
 
     const logGroup = new logs.LogGroup(this, 'Github-Webhook-API-Logs');
@@ -109,14 +107,14 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       },
     });
 
-    new cdk.CfnOutput(this, `api-gateway-domain-arn`, {
+    new cdk.CfnOutput(this, 'api-gateway-domain-arn', {
       value: `${githubWebhookApiGateway.arnForExecuteApi()}`,
-      exportName: `api-gateway-domain-arn`,
+      exportName: 'api-gateway-domain-arn',
     });
 
-    new cdk.CfnOutput(this, `webhook-url`, {
+    new cdk.CfnOutput(this, 'webhook-url', {
       value: `https://${githubWebhookApiGateway.restApiId}.execute-api.us-east-1.amazonaws.com/prod/webhook`,
-      exportName: `webhook-url`,
+      exportName: 'webhook-url',
     });
 
     const lambdaIntegration = new apigateway.LambdaIntegration(githubHandler, {

@@ -119,7 +119,7 @@
       "description": "Runs eslint against the codebase",
       "steps": [
         {
-          "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern $@ src test build-tools projenrc .projenrc.ts",
+          "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern $@ coverage node_modules test build-tools projenrc .projenrc.ts",
           "receiveArgs": true
         }
       ]
@@ -186,11 +186,21 @@
       "description": "Run tests",
       "steps": [
         {
-          "exec": "jest --passWithNoTests --updateSnapshot",
+          "exec": "jest --passWithNoTests --ci",
           "receiveArgs": true
         },
         {
           "spawn": "eslint"
+        }
+      ]
+    },
+    "test:update": {
+      "name": "test:update",
+      "description": "Update jest snapshots",
+      "steps": [
+        {
+          "exec": "jest --updateSnapshot --passWithNoTests --ci",
+          "receiveArgs": true
         }
       ]
     },
@@ -211,13 +221,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/deep-diff,@types/jest,@types/node,@types/npmlog,@typescript-eslint/eslint-plugin,@typescript-eslint/parser,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,eslint,jest,jest-junit,projen,ts-jest,ts-node,typescript,constructs,deep-diff,npmlog,ts-deepmerge"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/deep-diff,@types/jest,@types/node,@types/npmlog,@typescript-eslint/eslint-plugin,@typescript-eslint/parser,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,eslint,jest,jest-junit,projen,ts-jest,ts-node,typescript,yaml,constructs,deep-diff,npmlog,ts-deepmerge"
         },
         {
           "exec": "npm install"
         },
         {
-          "exec": "npm update @types/deep-diff @types/jest @types/node @types/npmlog @typescript-eslint/eslint-plugin @typescript-eslint/parser esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript constructs deep-diff npmlog ts-deepmerge"
+          "exec": "npm update @types/deep-diff @types/jest @types/node @types/npmlog @typescript-eslint/eslint-plugin @typescript-eslint/parser esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript yaml constructs deep-diff npmlog ts-deepmerge"
         },
         {
           "exec": "npx projen"

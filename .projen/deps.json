@@ -82,6 +82,10 @@
       "type": "build"
     },
     {
+      "name": "yaml",
+      "type": "build"
+    },
+    {
       "name": "aws-cdk-lib",
       "version": "2.117.0",
       "type": "runtime"

@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { Construct } from "constructs";
+import { Construct } from 'constructs';
 import { PrismaStack } from './prisma-stack';
 
 export class PrismaStage extends cdk.Stage {
