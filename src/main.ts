@@ -4,7 +4,6 @@ import { AppStack } from './infra/app/app-stack';
 import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { PrismaStack } from './infra/cicd/prisma-stack';
-import { AuthSecret } from './infra/shared/bootstrap-cross-account-auth-secret';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
 
 const app = new cdk.App();
@@ -63,10 +62,6 @@ if (targetStack == 'DBPipeline') {
     githubBranch: dbPipelineBranch,
     preApprovalRequired: true,
   });
-}
-
-if (targetStack == 'AuthSecret') {
-  new AuthSecret(app, 'AuthSecret', { env });
 }
 
 if (targetStack == 'GithubWebhookAPIStack') {

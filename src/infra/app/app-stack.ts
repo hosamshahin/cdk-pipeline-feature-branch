@@ -16,7 +16,7 @@ import { Construct } from 'constructs';
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct';
 
 export interface AppStackProps {
-  edgeLambdaName?: string | 'CloudfrontAuth';
+  edgeLambdaName?: string;
   useRdsDataBase?: boolean | false;
 }
 
@@ -79,7 +79,19 @@ export class AppStack extends cdk.Stack {
     /**
      * CloudFront Distribution and lambda edge
      */
-    const authSecret = sm.Secret.fromSecretCompleteArn(this, 'AuthSecret', cdk.Fn.importValue('AuthSecretOutput'));
+    const authSecret = new sm.Secret(this, 'AuthSecret', {
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({ config: '' }),
+        generateStringKey: 'base64EcodedConfig',
+        excludePunctuation: true,
+        includeSpace: false,
+      },
+    });
+
+    new cdk.CfnOutput(this, 'AuthSecretOutput', {
+      exportName: 'AuthSecretOutput',
+      value: authSecret.secretArn,
+    });
 
     const policyDocument = new iam.PolicyDocument({
       statements: [
@@ -193,11 +205,15 @@ export class AppStack extends cdk.Stack {
       },
     });
 
+    let edgeLambdaName = props?.edgeLambdaName || 'CloudfrontAuth'
     const cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
-      functionName: `${props!.edgeLambdaName}-cloudfrontAuth`,
+      functionName: `${edgeLambdaName}-cloudfrontAuth`,
       entry: require.resolve('../lambda/app/auth/auth.js'),
       role: cloudfrontAuthRole,
       timeout: cdk.Duration.seconds(5),
+      environment: {
+        authSecret: authSecret.secretName
+      }
     });
 
     const version = cloudfrontAuthFunction.currentVersion;
