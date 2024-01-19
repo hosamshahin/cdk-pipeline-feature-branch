@@ -16,7 +16,6 @@ import { Construct } from 'constructs';
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct';
 
 export interface AppStackProps {
-  edgeLambdaName?: string;
   useRdsDataBase?: boolean | false;
 }
 
@@ -194,9 +193,7 @@ export class AppStack extends cdk.Stack {
       },
     });
 
-    let edgeLambdaName = props?.edgeLambdaName || 'CloudfrontAuth'
     const cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
-      functionName: `${edgeLambdaName}-cloudfrontAuth`,
       entry: require.resolve('../lambda/app/auth/auth.js'),
       role: cloudfrontAuthRole,
       timeout: cdk.Duration.seconds(5)

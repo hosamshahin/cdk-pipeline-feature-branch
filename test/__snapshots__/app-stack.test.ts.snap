@@ -297,7 +297,6 @@ Resources:
         S3Bucket:
           Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
         S3Key: b6c5bc513af7ee69739265e5a97e6af3da759c9cc6ea4f84efcf40c93c348d74.zip
-      FunctionName: CloudfrontAuth-cloudfrontAuth
       Handler: index.handler
       Role:
         Fn::GetAtt:
@@ -307,7 +306,7 @@ Resources:
       Timeout: 5
     DependsOn:
       - CloudfrontAuthRole247E2116
-  CloudfrontAuthFunctionCurrentVersion3D197BFEa601849f53e880fcedd1aa868d0aca2c:
+  CloudfrontAuthFunctionCurrentVersion3D197BFEebc9a924dc126feb592b195a2e22d03d:
     Type: AWS::Lambda::Version
     Properties:
       FunctionName:
@@ -319,7 +318,7 @@ Resources:
         Ref: CloudfrontAuthFunction275EED4E
       FunctionVersion:
         Fn::GetAtt:
-          - CloudfrontAuthFunctionCurrentVersion3D197BFEa601849f53e880fcedd1aa868d0aca2c
+          - CloudfrontAuthFunctionCurrentVersion3D197BFEebc9a924dc126feb592b195a2e22d03d
           - Version
       Name: Current
   DistributionOrigin1S3Origin5F5C0696:
@@ -349,7 +348,7 @@ Resources:
             - EventType: viewer-request
               IncludeBody: false
               LambdaFunctionARN:
-                Ref: CloudfrontAuthFunctionCurrentVersion3D197BFEa601849f53e880fcedd1aa868d0aca2c
+                Ref: CloudfrontAuthFunctionCurrentVersion3D197BFEebc9a924dc126feb592b195a2e22d03d
           TargetOriginId: AppStackDistributionOrigin1FA502580
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: index.html

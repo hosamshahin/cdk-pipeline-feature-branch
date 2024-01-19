@@ -1,12 +1,12 @@
 
 ## Introduction
 
-This project extends the AWS CDK Pipelines capabilities to support feature branch development. Developers might need a short lived separate development environment provisioned for their own feature development. This project provides the platform which automatically creates a dedicated pipeline and an isolated environment when users create a new branch. It also takes care of tearing down and cleaning up all infrastructure and pipeline when the branch is merged and deleted. This model allows developers to work independently and concurrently which increases development speed and more importantly developers' satisfaction.
+This project extends the AWS CDK Pipelines capabilities to support feature branch development. Developers sometimes need a short lived separate development environment provisioned for their own feature development. This project provides the platform which automatically creates a dedicated pipeline and an isolated environment when users create a new branch. It also takes care of tearing down and cleaning up all infrastructure and pipeline when the branch is merged and deleted. This model allows developers to work independently and concurrently which increases development speed and more importantly developers' satisfaction.
 
 This solution follows AWS best practices by adopting a multi-account strategy. To deploy this solution you need 3 AWS accounts:
 - CICD: This account contains only deployment pipelines.
-- Development account: contains the development and all the feature branches environments workloads.
-- Production account: a dedicated account for production work loads.
+- Development account: contains the development and all the feature branches workloads.
+- Production account: a dedicated account for production workloads.
 
 This project uses a sample serverless application as an example. The application is presented in the [Extended CDK workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/071bbc60-6c1f-47b6-8c66-e84f5dc96b3f/en-US/10-introduction-and-setup#application-architecture
 ). The application uses dynamodb as a data store. If the user wants to use a relational database instead the project includes a separate RDS pipeline to manage the database provisioning separately if needed.
@@ -24,7 +24,7 @@ Before setting up the project let's go through the project folder structure and 
 
 - `./src/infra/app` contains all the application resources in one stack. For example AWS Lambda , API Gateway, CloudFront, DynamoDB, and S3 bucket
 - `./src/infra/cicd/app-pipeline-construct.ts` the application pipeline that creates a CDK Pipeline used to provision the application stack under `./src/infra/app`.
-- `./src/infra/cicd/database-pipeline-construct.ts` the database construct which creates a separate CDK pipeline that provisions an RDS database in both development and production accounts. Note, The database pipeline also provides a lambda function which uses [Prisma](https://www.prisma.io/) to automatically apply database migrations. If you choose to use the database pipeline you can write your initial database schema migrations under `./src/infra/lambda/prisma/prisma/migrations`. The pipeline will automatically trigger the lambda function which applies the migrations. Moving forward, you can add more migrations which would be applied automatically by the application pipeline where all `feature branches` pipelines migrations would be applied to the development database and migrations mierged to the `main` branch will be applied to the production database.
+- `./src/infra/cicd/database-pipeline-construct.ts` the database construct which creates a separate CDK pipeline that provisions an RDS database in both development and production accounts. Note, The database pipeline also provides a lambda function which uses [Prisma](https://www.prisma.io/) to automatically apply database migrations. If you choose to use the database pipeline you can write your initial database schema migrations under `./src/infra/lambda/prisma/prisma/migrations`. The pipeline will automatically trigger the lambda function which applies the migrations. Moving forward, you can add more migrations which would be applied automatically by the application pipeline where all `feature branches` pipelines migrations would be applied to the development database and migrations merged to the `main` branch will be applied to the production database.
 - `./src/infra/cicd/lambda` contains all the lambda function code used by the serverless application and the infrastructure.
 - `./src/infra/script` contains the CDK bootstrapping script
 - `./src/infra/shared` contains shared CDK constructs and stacks used to set up the infrastructure.
@@ -38,15 +38,12 @@ Before setting up the project let's go through the project folder structure and 
 
 ## Initial Setup
 - Fork [this repository](https://github.com/hosamshahin/cdk-pipeline-feature-branch) under your name then clone it.
-- Install dependency by installing porjen
-```sh
-npm install projen
-```
+- Install dependency by installing porjen `npm install projen`
 - login to CICD account and [create a connection](https://docs.aws.amazon.com/codepipeline/latest/userguide/connections-github.html#connections-github-console) to github
 - Take note of CICD/DEV/PRD accounts Ids you created previously and update [.projenrc.ts](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/.projenrc.ts) file. Also update github org, repository name, codeStar connection ARN created in the previous step.
 - Run `npx projen` to update project config files
 - Commit and push the changes to your repository
-- Update your local `~/.aws/credentials` file with the CICD/DEV/PRD accounts credentials. You can get the temporary credentials form the idently center SSO login screen. Expand the CICD/DEV/PRD accounts and select `Command line or programmatic access` then copy the `Short-term credentials` into `~/.aws/credentials` and name the profile cicd/dev/prd.
+- Update your local `~/.aws/credentials` file with the CICD/DEV/PRD accounts credentials. You can get the temporary credentials form the idently center SSO login screen. Expand the CICD/DEV/PRD accounts and select `Command line or programmatic access` then copy the `Short-term credentials` into `~/.aws/credentials` and name the profiles cicd/dev/prd.
 - Bootstrap your environments by using `./src/infra/script/bootstrap.sh` script
 
 
@@ -61,10 +58,11 @@ cdk deploy GithubWebhookAPIStack --profile cicd -c TargetStack=GithubWebhookAPIS
 
 After the stack gets deployed navigate to the stack output and copy `secretuuid` and `webhookurl` values.
 
-Go to your github repository and configure the webhook. Under `setting/webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries' tab you should see a successful `ping` message.
+Go to your github repository and configure the webhook. Under `Setting/Webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries` tab you should see a successful `ping` message.
 
 # Provision CloudFront auth secret in DEV/PRD
 This stack creates a secret which will be used to keep Google auth configuration. You need to deploy this stack in DEV/PRD accounts
+
 From the root of repository execute this command
 
 ```sh
@@ -102,7 +100,7 @@ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' private.pem;echo
 awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
 ```
-- Update the config below with Google App client ID and client secret, CloudFront distribution and Public/Private key generated above
+- Update the config below with Google App client ID and client secret, CloudFront distribution URL `CfnOutCloudFrontUrl` and Public/Private key generated above
 
 ```json
 {
@@ -113,7 +111,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
         "scope": "openid email"
     },
     "TOKEN_REQUEST": {
-        "client_id": "GOOGLE_CIENT_ID",
+        "client_id": "${GOOGLE_CIENT_ID}",
         "redirect_uri": "https://${CLOUDFRONT_URL}/_callback",
         "grant_type": "authorization_code",
         "client_secret": "${GOOGLE_CLIENT_SECRET}"
@@ -137,11 +135,11 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
 
 ## Test the feature branch capability
 
-Create a new branch and name it `featring-testing` then push it to your repository. Open CodePipeline in the CICD account you should see a new pipeline with a name [feature-testing-FeatureBranchPipeline](https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/feature-testing-FeatureBranchPipeline/view?region=us-east-1) created. Wait until the pipeline completes execution, switch to the DEV account and you should see a new stack named `feature-testing-AppStage-AppStack` created.
+Create a new branch and name it `featring-testing` then push it to your repository. Open CodePipeline in the CICD account you should see a new pipeline with a name `feature-testing-FeatureBranchPipeline` created. Wait until the pipeline completes execution, switch to the DEV account and you should see a new stack named `feature-testing-AppStage-AppStack` created.
 
 Delete the feature branch locally and form the remote repository, go to the CodePipeline in CICD account you will find the feature branch pipeline deleted. check the DEV account the CloudFormation stack for that branch should be deleted as well.
 
-Note: In order for the lambda function to create a new pipeline for a feature branch the branch name should start with `feature-`|`hotfix-`|`bug-`. You can change that behavior by modifying `branchPrefix`` attribute in [github-webhook-api-stack](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/src/infra/shared/github-webhook-api-stack.ts)
+Note: In order for the lambda function to create a new pipeline for a feature branch the branch name should start with `feature-`|`hotfix-`|`bug-`. You can change that behavior by modifying `branchPrefix` attribute in [github-webhook-api-stack](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/src/infra/shared/github-webhook-api-stack.ts)
 
 
 ## Infrastructure snapshot testing and using CDK-nag
@@ -173,4 +171,4 @@ If you are using a new CICD account for this solution you might find the applica
 - The details of how to use Prisma in a lambda function can be found [here](https://github.com/aws-samples/prisma-lambda-cdk).
 - You can find the sample serverless app used as a demo [here](https://github.com/aws-samples/extended-cdk-workshop-coffee-listing-app).
 - A good reference for [Github webhook impelentation](https://github.com/cloudcomponents/cdk-constructs/tree/master/examples/github-webhook-example).
-- An [example](https://github.com/aws-samples/lambdaedge-openidconnect-samples) on how to use lamada@Edge to integrate with an OIDC provider.
+- An [example](https://github.com/aws-samples/lambdaedge-openidconnect-samples) on how to use Lamada@Edge to integrate with an OIDC provider.
