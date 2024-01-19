@@ -80,7 +80,7 @@ export class AppStack extends cdk.Stack {
      * CloudFront Distribution and lambda edge
      */
 
-    const authSecret = sm.Secret.fromSecretCompleteArn(this, 'AuthSecret', cdk.Fn.importValue('AuthSecretOutput'));
+    const authSecret = sm.Secret.fromSecretCompleteArn(this, 'AuthSecret', cdk.Fn.importValue('CloudfrontAuthSecretArn'));
 
     const policyDocument = new iam.PolicyDocument({
       statements: [
