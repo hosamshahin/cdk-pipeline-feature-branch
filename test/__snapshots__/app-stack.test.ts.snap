@@ -215,7 +215,7 @@ Resources:
                   - secretsmanager:ListSecretVersionIds
                 Effect: Allow
                 Resource:
-                  Fn::ImportValue: AuthSecretOutput
+                  Fn::ImportValue: CloudfrontAuthSecretArn
             Version: 2012-10-17
           PolicyName: cloudfrontAuthPolicyDocument
         - PolicyDocument:
