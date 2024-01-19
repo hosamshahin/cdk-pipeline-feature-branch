@@ -33,6 +33,7 @@ test('AppStack cdk-nag AwsSolutions Pack', () => {
     { id: 'AwsSolutions-APIG6', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-APIG4', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-COG4', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-SMG4', reason: 'TBD reason of 10 characters or more' },
   ]);
 
   const warnings = Annotations.fromStack(stack).findWarning(

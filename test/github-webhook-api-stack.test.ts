@@ -32,7 +32,7 @@ test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
     Match.stringLikeRegexp('AwsSolutions-.*'),
   );
 
-  // console.dir(warnings)
+  // console.dir(warnings);
   expect(warnings).toHaveLength(0);
 
   const errors = Annotations.fromStack(stack).findError(
@@ -40,7 +40,7 @@ test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
     Match.stringLikeRegexp('AwsSolutions-.*'),
   );
 
-  // console.dir(errors)
+  // console.dir(errors);
   expect(errors).toHaveLength(0);
 
   const template = Template.fromStack(stack);

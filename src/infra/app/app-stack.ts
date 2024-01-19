@@ -41,8 +41,8 @@ export class AppStack extends cdk.Stack {
     const accounts = config.accounts || {};
     const currentAcct = cdk.Stack.of(this).account;
     const resourceAttr = config['resourceAttr'] || {};
-    const webhookAPILambdaRole = resourceAttr['webhookAPILambdaRole'] || {};
-    const authSecretName = resourceAttr['authSecretName'] || {};
+    const webhookAPILambdaRole = resourceAttr['webhookAPILambdaRole'] || '';
+    const authSecretName = resourceAttr['authSecretName'] || '';
     let frontEndCodeBuildStepRole = resourceAttr['frontEndCodeBuildStepRole'];
     frontEndCodeBuildStepRole = currentAcct == accounts.DEV_ACCOUNT_ID ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`;
 
