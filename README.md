@@ -8,9 +8,8 @@ This solution follows AWS best practices by adopting a multi-account strategy. T
 - Development account: contains the development and all the feature branches environments workloads.
 - Production account: a dedicated account for production work loads.
 
-This project uses a sample serverless application as an example. The application is presented in the Extended CDK workshop. The application uses dynamodb as a data store. If the user wants to use a relational database instead the project includes a separate RDS pipeline to manage the database provisioning separately if needed.
-
-https://catalog.us-east-1.prod.workshops.aws/workshops/071bbc60-6c1f-47b6-8c66-e84f5dc96b3f/en-US/10-introduction-and-setup#application-architecture
+This project uses a sample serverless application as an example. The application is presented in the [Extended CDK workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/071bbc60-6c1f-47b6-8c66-e84f5dc96b3f/en-US/10-introduction-and-setup#application-architecture
+). The application uses dynamodb as a data store. If the user wants to use a relational database instead the project includes a separate RDS pipeline to manage the database provisioning separately if needed.
 
 ## Overview of the solution
 ![Architecture diagram](./diagram.svg)
@@ -21,39 +20,32 @@ After deploying the pipeline when a developer creates a feature branch, github w
 
 ## Project folder structure
 
-Before setting up the project let's go through the project folder structure and learn more about its CDK constructs and stacks. What we have here is a typical CDK app created using projen. All source code goes under the `src` folder and CDK tests can be found under the `test` folder. The `src` folder contains a simple react application under the `client` folder and the `infra` folder contains the CDK constructs/stacks for the deployment pipelines, solution infrastructure resources, and serverless application resources.
+Before setting up the project let's go through the project folder structure and learn more about its CDK constructs and stacks. What we have here is a typical CDK app created using [projen](https://projen.io/). All source code goes under the `src` folder and CDK tests can be found under the `test` folder. The `src` folder contains a simple react application under the `client` folder and the `infra` folder contains the CDK constructs/stacks for the deployment pipelines, solution infrastructure resources, and serverless application resources.
 
 - `./src/infra/app` contains all the application resources in one stack. For example AWS Lambda , API Gateway, CloudFront, DynamoDB, and S3 bucket
 - `./src/infra/cicd/app-pipeline-construct.ts` the application pipeline that creates a CDK Pipeline used to provision the application stack under `./src/infra/app`.
-- `./src/infra/cicd/database-pipeline-construct.ts` the database construct which creates a separate CDK pipeline that provisions an RDS database in both development and production accounts. Note, The database pipeline also provides a lambda function which uses Prisma to automatically apply database migrations. If you choose to use the database pipeline you can write your initial database schema migrations under `./src/infra/lambda/prisma/prisma/migrations`. The pipeline will automatically trigger the lambda function which applies the migrations. Moving forward, you can add more migrations which would be applied automatically by the application pipeline where all `feature branches` pipelines migrations would be applied to the development database and migrations mierged to the `main` branch will be applied to the production database.
+- `./src/infra/cicd/database-pipeline-construct.ts` the database construct which creates a separate CDK pipeline that provisions an RDS database in both development and production accounts. Note, The database pipeline also provides a lambda function which uses [Prisma](https://www.prisma.io/) to automatically apply database migrations. If you choose to use the database pipeline you can write your initial database schema migrations under `./src/infra/lambda/prisma/prisma/migrations`. The pipeline will automatically trigger the lambda function which applies the migrations. Moving forward, you can add more migrations which would be applied automatically by the application pipeline where all `feature branches` pipelines migrations would be applied to the development database and migrations mierged to the `main` branch will be applied to the production database.
 - `./src/infra/cicd/lambda` contains all the lambda function code used by the serverless application and the infrastructure.
 - `./src/infra/script` contains the CDK bootstrapping script
 - `./src/infra/shared` contains shared CDK constructs and stacks used to set up the infrastructure.
 
 ## Prerequisites
 
-- An AWS management account
-- Create an organization with one OU then create thee accounts under it
-- It is recommended to set up IAM identity center for a single sign on for your organization
-- AWS CDK installed
-
-https://aws.amazon.com/free/
-https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tutorials_basic.html
-https://youtu.be/_KhrGFV_Npw?si=tyUzpLz4iB72k1XP
-https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install
+- An [AWS management account](https://aws.amazon.com/free/)
+- Create an [organization](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tutorials_basic.html) with one OU then create thee accounts under it
+- It is recommended to [set up IAM identity center](https://youtu.be/_KhrGFV_Npw?si=tyUzpLz4iB72k1XP) for a single sign on for your organization
+- [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) installed
 
 ## Initial Setup
-- Fork this repo under your name then clone it.
+- Fork [this repository](https://github.com/hosamshahin/cdk-pipeline-feature-branch) under your name then clone it.
 - Install dependency by installing porjen
 ```sh
 npm install projen
 ```
-https://projen.io/
-- login to CICD account and create a connection to github
-https://docs.aws.amazon.com/codepipeline/latest/userguide/connections-github.html#connections-github-console
-- Take note of CICD/DEV/PRD accounts Ids you created previously and update `.projenrc.ts` file. Also update github org, repo name, codeStar connection ARN created in the previous step.
-- Run `npx projen` to update config files
-- Commit and push the changes to your repo
+- login to CICD account and [create a connection](https://docs.aws.amazon.com/codepipeline/latest/userguide/connections-github.html#connections-github-console) to github
+- Take note of CICD/DEV/PRD accounts Ids you created previously and update [.projenrc.ts](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/.projenrc.ts) file. Also update github org, repository name, codeStar connection ARN created in the previous step.
+- Run `npx projen` to update project config files
+- Commit and push the changes to your repository
 - Update your local `~/.aws/credentials` file with the CICD/DEV/PRD accounts credentials. You can get the temporary credentials form the idently center SSO login screen. Expand the CICD/DEV/PRD accounts and select `Command line or programmatic access` then copy the `Short-term credentials` into `~/.aws/credentials` and name the profile cicd/dev/prd.
 - Bootstrap your environments by using `./src/infra/script/bootstrap.sh` script
 
@@ -61,7 +53,7 @@ https://docs.aws.amazon.com/codepipeline/latest/userguide/connections-github.htm
 # Provision github webhook stack
 The stack contains an api gateway (the webhook URL) backed by a lambda function which manages the feature branches life cycle. It also provides a secret string to secure the webhook endpoint.
 
-- From the root of repo execute this command
+- From the root of repository execute this command
 
 ```sh
 cdk deploy GithubWebhookAPIStack --profile cicd -c TargetStack=GithubWebhookAPIStack
@@ -69,35 +61,30 @@ cdk deploy GithubWebhookAPIStack --profile cicd -c TargetStack=GithubWebhookAPIS
 
 After the stack gets deployed navigate to the stack output and copy `secretuuid` and `webhookurl` values.
 
-Go to your github repo and configure the webhook. Under `setting/webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries' tab you should see a successful `ping` message.
+Go to your github repository and configure the webhook. Under `setting/webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries' tab you should see a successful `ping` message.
 
 # Provision database pipeline (optional)
-From the root of repo execute this command
+From the root of repository execute this command
 
 ```sh
 cdk deploy DBPipeline --profile cicd -c TargetStack=DBPipeline
 ```
 
 # Provision application pipeline
-As discussed earlier the application pipeline consists of two separate pipelines created in one stack. `pipeline-prd` is dedicated for production deployment and `pipeline-cicd` is a template pipeline used to create a new pipeline for each feature branch.
+As discussed earlier the application pipeline consists of two separate pipelines created in one cloudFormation stack. `pipeline-prd` is dedicated for production deployment and `pipeline-cicd` is a template pipeline used to create a new pipeline for each feature branch.
 
-From the root of repo execute this command
+From the root of repository execute this command
 
 ```sh
 cdk deploy Pipeline --profile cicd -c TargetStack=Pipeline
 ```
-After the pipeline stack is provisioned go to codepipeline you should see two pipelines `pipeline-cicd` which should be failing and this is expected because it is only used as a template. The other pipeline `pipeline-prd` which is monitoring the `main` branch should be running. Wait for the pipeline to reach the approval gate then approve it. One the pipeline is done, switch to production account and go to cloudformation you should find a new stack `AppStage-AppStack` created. In the stack output you will find `CfnOutCloudFrontUrl` which holds the application url.
+After the pipeline stack is provisioned go to [CodePipeline](https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1) you should see two pipelines `pipeline-cicd` which should be failing and this is expected because it is only used as a template. The other pipeline `pipeline-prd` which is monitoring the `main` branch should be running. Wait for the pipeline to reach the approval gate then approve it. Once the pipeline is done, switch to production account and go to cloudformation you should find a new stack `AppStage-AppStack` created. In the stack output you will find `CfnOutCloudFrontUrl` which holds the application url.
 
-Note: if you have provisioned the database pipeline and you want to continue applying Prisma migrations using the application piepine you need to set the `useRdsDataBase` parameter to `true`
-link to useRdsDataBase
-
-https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1
+Note: if you have provisioned the database pipeline and you want to continue applying Prisma migrations using the application piepine you need to set the [useRdsDataBase](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/src/infra/app/app-stack.ts) parameter to `true`
 
 ## Configure Google's OAuth 2.0 Application
-- Follow the instructions here to create Google's OAuth 2.0 Application.
-https://developers.google.com/identity/openid-connect/openid-connect#appsetup
-- Set the redirect URI to the cloudfront url `CfnOutCloudFrontUrl`/_callback
-Make you add `/_callback` at the end of the url.
+- Follow the instructions [here](https://developers.google.com/identity/openid-connect/openid-connect#appsetup) to create Google's OAuth 2.0 Application.
+- Set the redirect URI to the cloudfront url `CfnOutCloudFrontUrl`/_callback. Make you add `/_callback` at the end of the url.
 - Take note of the Google OAuth 2.0 credentials, including a client ID and client secret, to authenticate users and gain access to Google's APIs.
 - Generate Public and Private keys
 ```bash
@@ -106,26 +93,26 @@ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' private.pem;echo
 awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
 ```
-7. Update the config below with Google App client ID and client secret, CloudFront distribution and Public/Private key generated above
+- Update the config below with Google App client ID and client secret, CloudFront distribution and Public/Private key generated above
 
 ```json
 {
     "AUTH_REQUEST": {
-        "client_id": "GOOGLE_CIENT_ID",
-        "redirect_uri": "https://CLOUDFRONT_URL/_callback",
+        "client_id": "${GOOGLE_CIENT_ID}",
+        "redirect_uri": "https://${CLOUDFRONT_URL}/_callback",
         "response_type": "code",
         "scope": "openid email"
     },
     "TOKEN_REQUEST": {
         "client_id": "GOOGLE_CIENT_ID",
-        "redirect_uri": "https://CLOUDFRONT_URL/_callback",
+        "redirect_uri": "https://${CLOUDFRONT_URL}/_callback",
         "grant_type": "authorization_code",
-        "client_secret": "GOOGLE_CLIENT_SECRET"
+        "client_secret": "${GOOGLE_CLIENT_SECRET}"
     },
     "DISTRIBUTION": "amazon-oai",
     "AUTHN": "GOOGLE",
-    "PRIVATE_KEY": "PRIVATE_KEY",
-    "PUBLIC_KEY": "PUBLIC_KEY",
+    "PRIVATE_KEY": "${PRIVATE_KEY}",
+    "PUBLIC_KEY": "${PUBLIC_KEY}",
     "DISCOVERY_DOCUMENT": "https://accounts.google.com/.well-known/openid-configuration",
     "SESSION_DURATION": 3000,
     "BASE_URL": "https://accounts.google.com",
