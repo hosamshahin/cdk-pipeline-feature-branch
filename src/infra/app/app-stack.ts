@@ -90,8 +90,8 @@ export class AppStack extends cdk.Stack {
       },
     });
 
-    new cdk.CfnOutput(this, 'AuthSecretOutput', {
-      exportName: 'AuthSecretOutput',
+    new cdk.CfnOutput(this, 'CloudfrontAuthSecretOutput', {
+      exportName: 'CloudfrontAuthSecretOutput',
       value: authSecret.secretArn,
     });
 
