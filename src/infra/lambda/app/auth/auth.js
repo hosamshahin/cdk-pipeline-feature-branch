@@ -12,12 +12,11 @@ const fs = require('fs');
 const Log = require('./lib/log');
 
 let discoveryDocument;
-let { authSecret = '' } = process.env;
+let secretId;
 let jwks;
 let config;
 let deps;
 let log;
-
 
 /**
  * handle is the starting point for the lambda.
@@ -245,7 +244,14 @@ function validateNonce(nonce, hash) {
 // fetchConfigFromSecretsManager pulls the specified configuration from SecretsManager
 async function fetchConfigFromSecretsManager() {
 	// Get Secrets Manager Config Key from File since we cannot use environment variables.
-	const secret = await deps.sm.getSecretValue({ SecretId: authSecret }).promise(); // eslint-disable-next-line no-buffer-constructor
+	if (secretId == undefined) {
+		try {
+			secretId = 'cloudfrontAuthSecret';
+		} catch (err) {
+			log.error(err);
+		}
+	} // Attempted to read from CloudFront Custom Header due to Environment variable limitations // Must be an Origin Request, but we need this to be a Viewer Request.
+	const secret = await deps.sm.getSecretValue({ SecretId: secretId }).promise(); // eslint-disable-next-line no-buffer-constructor
 	const buff = Buffer.from(JSON.parse(secret.SecretString).config, 'base64');
 	const decodedval = JSON.parse(buff.toString('utf-8'));
 	return decodedval;

@@ -42,6 +42,7 @@ export class AppStack extends cdk.Stack {
     const currentAcct = cdk.Stack.of(this).account;
     const resourceAttr = config['resourceAttr'] || {};
     const webhookAPILambdaRole = resourceAttr['webhookAPILambdaRole'] || {};
+    const authSecretName = resourceAttr['authSecretName'] || {};
     let frontEndCodeBuildStepRole = resourceAttr['frontEndCodeBuildStepRole'];
     frontEndCodeBuildStepRole = currentAcct == accounts.DEV_ACCOUNT_ID ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`;
 
@@ -80,6 +81,7 @@ export class AppStack extends cdk.Stack {
      * CloudFront Distribution and lambda edge
      */
     const authSecret = new sm.Secret(this, 'AuthSecret', {
+      secretName: authSecretName,
       generateSecretString: {
         secretStringTemplate: JSON.stringify({ config: '' }),
         generateStringKey: 'base64EcodedConfig',
@@ -210,10 +212,7 @@ export class AppStack extends cdk.Stack {
       functionName: `${edgeLambdaName}-cloudfrontAuth`,
       entry: require.resolve('../lambda/app/auth/auth.js'),
       role: cloudfrontAuthRole,
-      timeout: cdk.Duration.seconds(5),
-      environment: {
-        authSecret: authSecret.secretName
-      }
+      timeout: cdk.Duration.seconds(5)
     });
 
     const version = cloudfrontAuthFunction.currentVersion;

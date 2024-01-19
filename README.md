@@ -41,12 +41,15 @@ https://youtu.be/_KhrGFV_Npw?si=tyUzpLz4iB72k1XP
 
 ## Initial Setup
 - Fork this repo under your name then clone it.
-- install dependency by installing porjen
-- npm install projen
-- take a note of cicd, dev, and prod accounts Ids you created previously and update .projenrc.ts file with the accounts Ids, gethub org and repo name.
-- run vpx projen to update config files
-- update your local ~/.aws/credentials file with the CICD/DEV/PRD accounts creditional. You can get the tempraty credintiaols form the idently center SSO login screen. Expand the CICD/DEV/PRD accounts and selelct "Command line or programmatic access" then copy the "Short-term credentials" into ~/.aws/credentials and name the profile cicd/dev/prd.
-- Bootstrap your enviromants by using ./src/infra/script/bootstrap.sh script
+- Install dependency by installing porjen
+```sh
+npm install projen
+```
+- Take note of CICD/DEV/PRD accounts Ids you created previously and update .projenrc.ts file. Also update gethub org and repo name.
+- Run `npx projen` to update config files
+- Commit and push you changes
+- Update your local `~/.aws/credentials` file with the CICD/DEV/PRD accounts creditional. You can get the tempraty credintiaols form the idently center SSO login screen. Expand the CICD/DEV/PRD accounts and selelct "Command line or programmatic access" then copy the "Short-term credentials" into ~/.aws/credentials and name the profile cicd/dev/prd.
+- Bootstrap your enviromants by using `./src/infra/script/bootstrap.sh` script
 - login to cicd account and create a connection to gethub
 https://docs.aws.amazon.com/codepipeline/latest/userguide/connections-github.html#connections-github-console
 
@@ -56,14 +59,35 @@ The stack contains api gate way (the webhook URL) backed by lambda functin which
 
 from the root of repo execute this commend
 
+```sh
 cdk deploy GithubWebhookAPIStack --profile cicd -c TargetStack=GithubWebhookAPIStack
+```
 
-after the stack got deployed navigate to the stack output and copy secretuuid and webhookurl values.
+after the stack got deployed navigate to the stack output and copy `secretuuid` and `webhookurl` values.
 
-go to your github repo and configure the webhook. Under setting/webhook click add  webhook. Add the value of webhookurl to `payload URL` and the value of `secretuuid` to `Secret` then cllick `Add webhook`. to check the webhook is working corrctly go to the `Recent Deliveris` tab you should see a successful `ping` message.
+Go to your github repo and configure the webhook. Under setting/webhook click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working corrctly go to the `Recent Deliveris` tab you should see a successful `ping` message.
 
-# Provision cross account auth secret
-The sample serverless app used to demo this solution supports social login using Google's OAuth 2.0 APIs.
+# Provision application pipeline
+As discussed eariler the application piepline consits of two separate pieplines created in one stack. `pipeline-prd` is dedicated for productino depplyent and `pipeline-cicd` is a template pipeline used by the lambda function created in the previous step to create a new pipeline for each feature branch.
+
+From the root of repo execute this commend
+
+```sh
+cdk deploy Pipeline --profile cicd -c TargetStack=Pipeline
+```
+
+# Provision database pipeline (optional)
+From the root of repo execute this commend
+
+```sh
+cdk deploy DBPipeline --profile cicd -c TargetStack=DBPipeline
+```
+
+After the pipeine stack is provisioned go to codepipline you sould see two pipelines `pipeline-cicd` which should be failing and this is expected becasue it is only used as a template. The other pipeline `pipeline-prd` which is monitoring the main branh should be running. Wait for the pipeline to reach the approval gate then approvev it. One the pipeline is done switch to production account and go to cloudformation you shoud find a new stack `AppStage-AppStack` created. In the stack output you will find `CfnOutCloudFrontUrl` which holds the application url.
+
+# Configure google OIDC
+The application wont work until you configure the google login application.
+
 
 
 

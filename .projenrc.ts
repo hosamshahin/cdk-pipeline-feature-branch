@@ -47,6 +47,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         webhookAPILambdaRole: 'webhookAPILambdaRole',
         frontEndCodeBuildStepRole: 'frontEndCodeBuildStepRole',
         dbPipelineBranch: 'dbPipelineBranch',
+        authSecretName: 'cloudfrontAuthSecret',
       },
     },
   },
