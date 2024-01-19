@@ -5,6 +5,7 @@ import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { PrismaStack } from './infra/cicd/prisma-stack';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
+import { AuthSecret } from './infra/shared/cross-account-auth-secret';
 
 const app = new cdk.App();
 const env = {
@@ -13,7 +14,7 @@ const env = {
 };
 
 const config = app.node.tryGetContext('config') || {};
-const resourceAttr = config['resourceAttr'] ||{}
+const resourceAttr = config['resourceAttr'] || {}
 const dbPipelineBranch = resourceAttr['dbPipelineBranch'];
 
 const targetStack = app.node.tryGetContext('TargetStack');
@@ -74,6 +75,10 @@ if (targetStack == 'PrismaStack') {
 
 if (targetStack == 'AppStack') {
   new AppStack(app, 'AppStack', {}, { env });
+}
+
+if (targetStack == 'AuthSecret') {
+  new AuthSecret(app, 'AuthSecret', { env });
 }
 
 app.synth();

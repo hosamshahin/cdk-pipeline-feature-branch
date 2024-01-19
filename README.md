@@ -63,6 +63,15 @@ After the stack gets deployed navigate to the stack output and copy `secretuuid`
 
 Go to your github repository and configure the webhook. Under `setting/webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries' tab you should see a successful `ping` message.
 
+# Provision CloudFront auth secret in DEV/PRD
+This stack creates a secret which will be used to keep Google auth configuration. You need to deploy this stack in DEV/PRD accounts
+From the root of repository execute this command
+
+```sh
+cdk deploy AuthSecret --profile dev -c TargetStack=AuthSecret
+cdk deploy AuthSecret --profile prd -c TargetStack=AuthSecret
+```
+
 # Provision database pipeline (optional)
 From the root of repository execute this command
 
@@ -71,14 +80,14 @@ cdk deploy DBPipeline --profile cicd -c TargetStack=DBPipeline
 ```
 
 # Provision application pipeline
-As discussed earlier the application pipeline consists of two separate pipelines created in one cloudFormation stack. `pipeline-prd` is dedicated for production deployment and `pipeline-cicd` is a template pipeline used to create a new pipeline for each feature branch.
+As discussed earlier the application pipeline consists of two separate pipelines created in one CloudFormation stack. `pipeline-prd` is dedicated for production deployment and `pipeline-cicd` is a template pipeline used to create a new pipeline for each feature branch.
 
 From the root of repository execute this command
 
 ```sh
 cdk deploy Pipeline --profile cicd -c TargetStack=Pipeline
 ```
-After the pipeline stack is provisioned go to [CodePipeline](https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1) you should see two pipelines `pipeline-cicd` which should be failing and this is expected because it is only used as a template. The other pipeline `pipeline-prd` which is monitoring the `main` branch should be running. Wait for the pipeline to reach the approval gate then approve it. Once the pipeline is done, switch to production account and go to cloudformation you should find a new stack `AppStage-AppStack` created. In the stack output you will find `CfnOutCloudFrontUrl` which holds the application url.
+After the pipeline stack is provisioned go to [CodePipeline](https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1) you should see two pipelines `pipeline-cicd` which should be failing and this is expected because it is only used as a template. The other pipeline `pipeline-prd` which is monitoring the `main` branch should be running. Wait for the pipeline to reach the approval gate then approve it. Once the pipeline is done, switch to production account and go to CloudFormation you should find a new stack `AppStage-AppStack` created. In the stack output you will find `CfnOutCloudFrontUrl` which holds the application url.
 
 Note: if you have provisioned the database pipeline and you want to continue applying Prisma migrations using the application piepine you need to set the [useRdsDataBase](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/src/infra/app/app-stack.ts) parameter to `true`
 
@@ -120,7 +129,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
     "AUTHZ": "GOOGLE"
 }
 ```
-- Encode the config above to Base64 format with an online tool. Go to the application stack in DEV/PRD `AppStage-AppStack` , get the auth secret name from the output `CloudfrontAuthSecretOutput` then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
+- Encode the config above to Base64 format with an online tool. Go to the `AuthSecret` stack in DEV/PRD, get the auth secret ARN from the output `CloudfrontAuthSecretArn` then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
 ```json
 { "config": "base64EcodedConfig" }
 
@@ -128,24 +137,40 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
 
 ## Test the feature branch capability
 
-Create a new branch and name it `featring-testing` then push it to your repo. Open codepipeline in the CICD account you should see a new pipeline name `feature-testing-featurebacn` created. Wait until the pipeline completes execution switch to the DEV account you should see a new stack named `feature- testing` was created.
+Create a new branch and name it `featring-testing` then push it to your repository. Open CodePipeline in the CICD account you should see a new pipeline with a name [feature-testing-FeatureBranchPipeline](https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/feature-testing-FeatureBranchPipeline/view?region=us-east-1) created. Wait until the pipeline completes execution, switch to the DEV account and you should see a new stack named `feature-testing-AppStage-AppStack` created.
 
-Delete the feature branch locally and form the remote repo, go to the codepipeline in CICD account you will find the feature branch pipien deleted. check the DEV account the cloudFormation stack for that branch should be deleted as well.
+Delete the feature branch locally and form the remote repository, go to the CodePipeline in CICD account you will find the feature branch pipeline deleted. check the DEV account the CloudFormation stack for that branch should be deleted as well.
 
+Note: In order for the lambda function to create a new pipeline for a feature branch the branch name should start with `feature-`|`hotfix-`|`bug-`. You can change that behavior by modifying `branchPrefix`` attribute in [github-webhook-api-stack](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/src/infra/shared/github-webhook-api-stack.ts)
+
+
+## Infrastructure snapshot testing and using CDK-nag
+This project adopts the snapshot testing strategy. Under the `test` folder you will find test files for the main CDK stacks/constructs. All snapshots are generated under the `__snapshots__` folder. Any time you make a change to the app/infra stacks/constructs you need to update the snapshots otherwise the deployment will fail. It is always a good practice to keep your snapshots changes as part of your team code review process.
+
+To update a test snapshot use the following command
+```sh
+npm run test:update -- app-stack.test.ts
+npm run test:update -- cross-account-auth-secret.test.ts
+npm run test:update -- github-webhook-api-stack.test.ts
+npm run test:update -- prisma-stack.test.ts
+```
+
+make sure before you push any changes to run the snapshot test locally `npm run test` to avoid pipeline failures.
+
+This project uses [cdk-nag](https://github.com/cdklabs/cdk-nag) for infrastructure security checks and best practices. Make sure to mitigate cdk-nag errors/warnings either by solving or suppressing the issue. See test files for more details.
 
 ## Cleanup
 
-Simply delete all cloudformation stacks in CICD/DEV/PRD accounts.
+Simply delete all CloudFormation stacks in CICD/DEV/PRD accounts.
 
 ## Known issue
 
-If you are using a new CICD account for this solution you might find the application pipeline is failing due to codeBuild limited run concurrency. You can get around this issue by retrying the failed steps. But it is recommended to use AWS Service Quotas to submit a request to increase the `Concurrently running builds for Linux/Small environment` to 10.
-https://us-east-1.console.aws.amazon.com/servicequotas/home?region=us-east-1#
+If you are using a new CICD account for this solution you might find the application pipeline is failing due to codeBuild limited run concurrency. You can get around this issue by retrying the failed steps. But it is recommended to use [AWS Service Quotas](https://us-east-1.console.aws.amazon.com/servicequotas/home?region=us-east-1#
+) to submit a request to increase the `Concurrently running builds for Linux/Small environment` to 10.
 
-
-## Refrences
-- The multi branch pipeine was inspired by @xyz work https://github.com/wolfgangunger/cdk-codepipeline-multibranch
-- Using Prisma in lambda function in details can be found here https://github.com/aws-samples/prisma-lambda-cdk
-- You can find the sample serverless app used as a demo here https://github.com/aws-samples/extended-cdk-workshop-coffee-listing-app
-- A good reference for Github webhook impelentation https://github.com/cloudcomponents/cdk-constructs/tree/master/examples/github-webhook-example
-- An example on how to use lamada@ edge to integrate iwth OIDC provider. https://github.com/aws-samples/lambdaedge-openidconnect-samples
+## References
+- The multi branch pipeline was inspired by @wolfgangunger work [here](https://github.com/wolfgangunger/cdk-codepipeline-multibranch).
+- The details of how to use Prisma in a lambda function can be found [here](https://github.com/aws-samples/prisma-lambda-cdk).
+- You can find the sample serverless app used as a demo [here](https://github.com/aws-samples/extended-cdk-workshop-coffee-listing-app).
+- A good reference for [Github webhook impelentation](https://github.com/cloudcomponents/cdk-constructs/tree/master/examples/github-webhook-example).
+- An [example](https://github.com/aws-samples/lambdaedge-openidconnect-samples) on how to use lamada@Edge to integrate with an OIDC provider.

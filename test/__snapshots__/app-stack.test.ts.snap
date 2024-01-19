@@ -191,17 +191,6 @@ Resources:
             - " S3 bucket."
     DependsOn:
       - CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092
-  AuthSecretC13F30CE:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      GenerateSecretString:
-        ExcludePunctuation: true
-        GenerateStringKey: base64EcodedConfig
-        IncludeSpace: false
-        SecretStringTemplate: '{"config":""}'
-      Name: ""
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
   CloudfrontAuthRole247E2116:
     Type: AWS::IAM::Role
     Properties:
@@ -226,7 +215,7 @@ Resources:
                   - secretsmanager:ListSecretVersionIds
                 Effect: Allow
                 Resource:
-                  Ref: AuthSecretC13F30CE
+                  Fn::ImportValue: AuthSecretOutput
             Version: 2012-10-17
           PolicyName: cloudfrontAuthPolicyDocument
         - PolicyDocument:
@@ -995,11 +984,6 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/CloudFrontFullAccess
 Outputs:
-  CloudfrontAuthSecretOutput:
-    Value:
-      Ref: AuthSecretC13F30CE
-    Export:
-      Name: CloudfrontAuthSecretOutput
   CfnOutCloudFrontUrl:
     Description: URL for CLOUDFRONT_URL in \`frontend/.env\` file
     Value:
