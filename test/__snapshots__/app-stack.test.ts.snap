@@ -995,11 +995,11 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/CloudFrontFullAccess
 Outputs:
-  AuthSecretOutput:
+  CloudfrontAuthSecretOutput:
     Value:
       Ref: AuthSecretC13F30CE
     Export:
-      Name: AuthSecretOutput
+      Name: CloudfrontAuthSecretOutput
   CfnOutCloudFrontUrl:
     Description: URL for CLOUDFRONT_URL in \`frontend/.env\` file
     Value:
