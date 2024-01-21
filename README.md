@@ -36,7 +36,7 @@ Before setting up the project let's go through the project folder structure and 
 - It is recommended to [set up IAM identity center](https://youtu.be/_KhrGFV_Npw?si=tyUzpLz4iB72k1XP) for a single sign on for your organization
 - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) installed
 
-## Initial Setup
+## Solution Setup
 - Fork [this repository](https://github.com/hosamshahin/cdk-pipeline-feature-branch) under your name then clone it.
 - Install dependency by installing porjen `npm install projen`
 - login to CICD account and [create a connection](https://docs.aws.amazon.com/codepipeline/latest/userguide/connections-github.html#connections-github-console) to github
@@ -47,7 +47,7 @@ Before setting up the project let's go through the project folder structure and 
 - Bootstrap your environments by using `./src/infra/script/bootstrap.sh` script
 
 
-# Provision github webhook stack
+### Provision github webhook stack
 The stack contains an api gateway (the webhook URL) backed by a lambda function which manages the feature branches life cycle. It also provides a secret string to secure the webhook endpoint.
 
 - From the root of repository execute this command
@@ -60,7 +60,7 @@ After the stack gets deployed navigate to the stack output and copy `secretuuid`
 
 Go to your github repository and configure the webhook. Under `Setting/Webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries` tab you should see a successful `ping` message.
 
-# Provision CloudFront auth secret in DEV/PRD
+### Provision CloudFront auth secret in DEV/PRD
 This stack creates a secret which will be used to keep Google auth configuration. You need to deploy this stack in DEV/PRD accounts
 
 From the root of repository execute this command
@@ -70,14 +70,14 @@ cdk deploy AuthSecret --profile dev -c TargetStack=AuthSecret
 cdk deploy AuthSecret --profile prd -c TargetStack=AuthSecret
 ```
 
-# Provision database pipeline (optional)
+### Provision database pipeline (optional)
 From the root of repository execute this command
 
 ```sh
 cdk deploy DBPipeline --profile cicd -c TargetStack=DBPipeline
 ```
 
-# Provision application pipeline
+### Provision application pipeline
 As discussed earlier the application pipeline consists of two separate pipelines created in one CloudFormation stack. `pipeline-prd` is dedicated for production deployment and `pipeline-cicd` is a template pipeline used to create a new pipeline for each feature branch.
 
 From the root of repository execute this command
@@ -89,7 +89,7 @@ After the pipeline stack is provisioned go to [CodePipeline](https://us-east-1.c
 
 Note: if you have provisioned the database pipeline and you want to continue applying Prisma migrations using the application piepine you need to set the [useRdsDataBase](https://github.com/hosamshahin/cdk-pipeline-feature-branch/blob/main/src/infra/app/app-stack.ts) parameter to `true`
 
-## Configure Google's OAuth 2.0 Application
+### Configure Google's OAuth 2.0 Application
 - Follow the instructions [here](https://developers.google.com/identity/openid-connect/openid-connect#appsetup) to create Google's OAuth 2.0 Application.
 - Set the redirect URI to the cloudfront url `CfnOutCloudFrontUrl`/_callback. Make you add `/_callback` at the end of the url.
 - Take note of the Google OAuth 2.0 credentials, including a client ID and client secret, to authenticate users and gain access to Google's APIs.
@@ -135,7 +135,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
 
 ## Test the feature branch capability
 
-Create a new branch and name it `featring-testing` then push it to your repository. Open CodePipeline in the CICD account you should see a new pipeline with a name `feature-testing-FeatureBranchPipeline` created. Wait until the pipeline completes execution, switch to the DEV account and you should see a new stack named `feature-testing-AppStage-AppStack` created.
+Create a new branch and name it `feature-testing` then push it to your repository. Open CodePipeline in the CICD account you should see a new pipeline with a name `feature-testing-FeatureBranchPipeline` created. Wait until the pipeline completes execution, switch to the DEV account and you should see a new stack named `feature-testing-AppStage-AppStack` created.
 
 Delete the feature branch locally and form the remote repository, go to the CodePipeline in CICD account you will find the feature branch pipeline deleted. check the DEV account the CloudFormation stack for that branch should be deleted as well.
 
