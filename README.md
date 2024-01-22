@@ -58,7 +58,13 @@ cdk deploy GithubWebhookAPIStack --profile cicd -c TargetStack=GithubWebhookAPIS
 
 After the stack gets deployed navigate to the stack output and copy `secretuuid` and `webhookurl` values.
 
-Go to your github repository and configure the webhook. Under `Setting/Webhook` click add  webhook. Add the value of `webhookurl` to `payload URL` and the value of `secretuuid` to `Secret` then click `Add webhook`. to check the webhook is working correctly go to the `Recent Deliveries` tab you should see a successful `ping` message.
+Go to your github repository and configure the webhook. Under `Setting/Webhook` click add  webhook.
+- Add the value of `webhookurl` to `payload URL`
+- Add the value of `secretuuid` to `Secret`
+- Choose `application/json` as `Content Type`
+- Under `Which events would you like to trigger this webhook?` section select `Let me select individual events` then only choose `Branch or tag creation/deletion`
+- then click `Add webhook`
+to check the webhook is working correctly go to the `Recent Deliveries` tab you should see a successful `ping` message.
 
 ### Provision CloudFront auth secret in DEV/PRD
 This stack creates a secret which will be used to keep Google auth configuration. You need to deploy this stack in DEV/PRD accounts
