@@ -294,9 +294,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: b6c5bc513af7ee69739265e5a97e6af3da759c9cc6ea4f84efcf40c93c348d74.zip
+        S3Bucket: bucketName
+        S3Key: objectKey
       Handler: index.handler
       Role:
         Fn::GetAtt:
@@ -306,7 +305,7 @@ Resources:
       Timeout: 5
     DependsOn:
       - CloudfrontAuthRole247E2116
-  CloudfrontAuthFunctionCurrentVersion3D197BFEebc9a924dc126feb592b195a2e22d03d:
+  CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715:
     Type: AWS::Lambda::Version
     Properties:
       FunctionName:
@@ -318,7 +317,7 @@ Resources:
         Ref: CloudfrontAuthFunction275EED4E
       FunctionVersion:
         Fn::GetAtt:
-          - CloudfrontAuthFunctionCurrentVersion3D197BFEebc9a924dc126feb592b195a2e22d03d
+          - CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715
           - Version
       Name: Current
   DistributionOrigin1S3Origin5F5C0696:
@@ -348,7 +347,7 @@ Resources:
             - EventType: viewer-request
               IncludeBody: false
               LambdaFunctionARN:
-                Ref: CloudfrontAuthFunctionCurrentVersion3D197BFEebc9a924dc126feb592b195a2e22d03d
+                Ref: CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715
           TargetOriginId: AppStackDistributionOrigin1FA502580
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: index.html
@@ -443,9 +442,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: beea069c1bdeb240229cbb10e82560510455aceb97b7597e696e477d65031599.zip
+        S3Bucket: bucketName
+        S3Key: objectKey
       Environment:
         Variables:
           BUCKET_NAME:
@@ -498,9 +496,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: 03976fd35232445f54b425ddfacefd5cfd3ffc1e0af610badf7c663204f4b5c8.zip
+        S3Bucket: bucketName
+        S3Key: objectKey
       Environment:
         Variables:
           DYNAMODB_TABLE_LIKES_NAME:

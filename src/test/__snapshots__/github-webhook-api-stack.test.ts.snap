@@ -50,9 +50,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: bd3a83f9826522c5508282eb24519bc6a4f666aa754b91be0c2536c78de020fd.zip
+        S3Bucket: bucketName
+        S3Key: objectKey
       Handler: generate_uuid.on_event
       Role:
         Fn::GetAtt:
@@ -102,9 +101,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: 7382a0addb9f34974a1ea6c6c9b063882af874828f366f5c93b2b7b64db15c94.zip
+        S3Bucket: bucketName
+        S3Key: objectKey
       Description: AWS CDK resource provider framework - onEvent
         (GithubWebhookAPIStack/GenerateUUIDProvider/uuid-provider)
       Environment:
@@ -169,9 +167,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: 3c5c33f38c920072af4f63729db96aa107655c61b7ff594642e52126833fec85.zip
+        S3Bucket: bucketName
+        S3Key: objectKey
       Environment:
         Variables:
           pipelineTemplate: Pipeline-cicd

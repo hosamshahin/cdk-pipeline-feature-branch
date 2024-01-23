@@ -1,0 +1,779 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NextjsLambdaCdkStack cdk-nag AwsSolutions Pack 1`] = `
+"Metadata:
+  cdk_nag:
+    rules_to_suppress:
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG3
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-CFR1
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-CFR2
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-IAM4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-L1
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG2
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG1
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG6
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-COG4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-S1
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-S10
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-IAM5
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-CFR3
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-CFR4
+Resources:
+  NextCdkFunctionServiceRole5A77F620:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  NextCdkFunctionF5F3BB9E:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - x86_64
+      Code:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          RUST_LOG: info
+          PORT: "8080"
+      Handler: run.sh
+      Layers:
+        - Fn::Join:
+            - ""
+            - - "arn:aws:lambda:"
+              - Ref: AWS::Region
+              - :753240598075:layer:LambdaAdapterLayerX86:3
+      Role:
+        Fn::GetAtt:
+          - NextCdkFunctionServiceRole5A77F620
+          - Arn
+      Runtime: nodejs16.x
+    DependsOn:
+      - NextCdkFunctionServiceRole5A77F620
+  apiC8550315:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: api
+  apiCloudWatchRoleAC81D93E:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  apiAccount57E28B43:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - apiCloudWatchRoleAC81D93E
+          - Arn
+    DependsOn:
+      - apiC8550315
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  apiDeployment149F12941e50a47e57a3cdd2bdc8a9a0fb55452e:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Automatically created by the RestApi construct
+      RestApiId:
+        Ref: apiC8550315
+    DependsOn:
+      - apiproxyANY7F13F09C
+      - apiproxyOPTIONSDEB09BE6
+      - apiproxy4EA44110
+      - apiANYB3DF8C3C
+      - apiOPTIONS5A1027A6
+  apiDeploymentStageprod896C8101:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId:
+        Ref: apiDeployment149F12941e50a47e57a3cdd2bdc8a9a0fb55452e
+      RestApiId:
+        Ref: apiC8550315
+      StageName: prod
+    DependsOn:
+      - apiAccount57E28B43
+  apiOPTIONS5A1027A6:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
+                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      RestApiId:
+        Ref: apiC8550315
+  apiANYApiPermissionNextjsLambdaCdkStackapi19C4A91BANYF7BEB999:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - NextCdkFunctionF5F3BB9E
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: apiC8550315
+            - /
+            - Ref: apiDeploymentStageprod896C8101
+            - /*/
+  apiANYB3DF8C3C:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - NextCdkFunctionF5F3BB9E
+                  - Arn
+              - /invocations
+      ResourceId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      RestApiId:
+        Ref: apiC8550315
+  apiproxy4EA44110:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      PathPart: "{proxy+}"
+      RestApiId:
+        Ref: apiC8550315
+  apiproxyOPTIONSDEB09BE6:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
+                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: apiproxy4EA44110
+      RestApiId:
+        Ref: apiC8550315
+  apiproxyANYApiPermissionNextjsLambdaCdkStackapi19C4A91BANYproxy4D0BD100:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - NextCdkFunctionF5F3BB9E
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: apiC8550315
+            - /
+            - Ref: apiDeploymentStageprod896C8101
+            - /*/*
+  apiproxyANY7F13F09C:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - NextCdkFunctionF5F3BB9E
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: apiproxy4EA44110
+      RestApiId:
+        Ref: apiC8550315
+  nextbucket0EBCEB02:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: aws-cdk:cr-owned:_next/static:9d010acc
+          Value: "true"
+        - Key: aws-cdk:cr-owned:static:38caf316
+          Value: "true"
+      VersioningConfiguration:
+        Status: Enabled
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  nextbucketPolicy27F4BDB2:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: nextbucket0EBCEB02
+      PolicyDocument:
+        Statement:
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - DistributionOrigin2S3OriginE484D4BF
+                  - S3CanonicalUserId
+            Resource:
+              Fn::Join:
+                - ""
+                - - Fn::GetAtt:
+                      - nextbucket0EBCEB02
+                      - Arn
+                  - /*
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - DistributionOrigin3S3Origin24527178
+                  - S3CanonicalUserId
+            Resource:
+              Fn::Join:
+                - ""
+                - - Fn::GetAtt:
+                      - nextbucket0EBCEB02
+                      - Arn
+                  - /*
+        Version: 2012-10-17
+  CloudfrontAuthRole247E2116:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: edgelambda.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - secretsmanager:GetResourcePolicy
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                Effect: Allow
+                Resource:
+                  Fn::ImportValue: CloudfrontAuthSecretArn
+            Version: 2012-10-17
+          PolicyName: cloudfrontAuthPolicyDocument
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - acm:ListCertificates
+                  - cloudfront:DescribeFunction
+                  - cloudfront:Get*
+                  - cloudfront:List*
+                  - iam:ListServerCertificates
+                  - route53:List*
+                  - waf:ListWebACLs
+                  - waf:GetWebACL
+                  - wafv2:ListWebACLs
+                  - wafv2:GetWebACL
+                Effect: Allow
+                Resource: "*"
+            Version: 2012-10-17
+          PolicyName: cloudfrontReadOnlyAccessPolicyDocument
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - cloudformation:DescribeStacks
+                  - cloudformation:ListStackResources
+                  - cloudwatch:GetMetricData
+                  - cloudwatch:ListMetrics
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeVpcs
+                  - kms:ListAliases
+                  - iam:GetPolicy
+                  - iam:GetPolicyVersion
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListRolePolicies
+                  - iam:ListRoles
+                  - logs:DescribeLogGroups
+                  - lambda:Get*
+                  - lambda:List*
+                  - states:DescribeStateMachine
+                  - states:ListStateMachines
+                  - tag:GetResources
+                  - xray:GetTraceSummaries
+                  - xray:BatchGetTraces
+                Effect: Allow
+                Resource: "*"
+              - Action:
+                  - logs:DescribeLogStreams
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Effect: Allow
+                Resource: arn:aws:logs:*:*:log-group:/aws/lambda/*
+            Version: 2012-10-17
+          PolicyName: lambdaReadOnlyAccessPolicyDocument
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: "*"
+            Version: 2012-10-17
+          PolicyName: lambdaBasicExecutionRolePolicyDocument
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - lambda:GetFunction
+                  - lambda:UpdateFunctionCode
+                Effect: Allow
+                Resource: "*"
+            Version: 2012-10-17
+          PolicyName: policyDocument
+  CloudfrontAuthFunction275EED4E:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+          - CloudfrontAuthRole247E2116
+          - Arn
+      Runtime: nodejs16.x
+      Timeout: 5
+    DependsOn:
+      - CloudfrontAuthRole247E2116
+  CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName:
+        Ref: CloudfrontAuthFunction275EED4E
+  LambdaAlias9C15A666:
+    Type: AWS::Lambda::Alias
+    Properties:
+      FunctionName:
+        Ref: CloudfrontAuthFunction275EED4E
+      FunctionVersion:
+        Fn::GetAtt:
+          - CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715
+          - Version
+      Name: Current
+  DistributionOrigin2S3OriginE484D4BF:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Identity for NextjsLambdaCdkStackDistributionOrigin2320F9358
+  DistributionOrigin3S3Origin24527178:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Identity for NextjsLambdaCdkStackDistributionOrigin30EAB6881
+  Distribution830FAC52:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        CacheBehaviors:
+          - CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            Compress: true
+            PathPattern: _next/static/*
+            TargetOriginId: NextjsLambdaCdkStackDistributionOrigin2320F9358
+            ViewerProtocolPolicy: https-only
+          - CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            Compress: true
+            PathPattern: static/*
+            TargetOriginId: NextjsLambdaCdkStackDistributionOrigin30EAB6881
+            ViewerProtocolPolicy: https-only
+        DefaultCacheBehavior:
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          Compress: true
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              IncludeBody: false
+              LambdaFunctionARN:
+                Ref: CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715
+          TargetOriginId: NextjsLambdaCdkStackDistributionOrigin197B8FEE7
+          ViewerProtocolPolicy: redirect-to-https
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            DomainName:
+              Fn::Select:
+                - 2
+                - Fn::Split:
+                    - /
+                    - Fn::Join:
+                        - ""
+                        - - https://
+                          - Ref: apiC8550315
+                          - .execute-api.
+                          - Ref: AWS::Region
+                          - .
+                          - Ref: AWS::URLSuffix
+                          - /
+                          - Ref: apiDeploymentStageprod896C8101
+                          - /
+            Id: NextjsLambdaCdkStackDistributionOrigin197B8FEE7
+            OriginPath:
+              Fn::Join:
+                - ""
+                - - /
+                  - Fn::Select:
+                      - 3
+                      - Fn::Split:
+                          - /
+                          - Fn::Join:
+                              - ""
+                              - - https://
+                                - Ref: apiC8550315
+                                - .execute-api.
+                                - Ref: AWS::Region
+                                - .
+                                - Ref: AWS::URLSuffix
+                                - /
+                                - Ref: apiDeploymentStageprod896C8101
+                                - /
+          - DomainName:
+              Fn::GetAtt:
+                - nextbucket0EBCEB02
+                - RegionalDomainName
+            Id: NextjsLambdaCdkStackDistributionOrigin2320F9358
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ""
+                  - - origin-access-identity/cloudfront/
+                    - Ref: DistributionOrigin2S3OriginE484D4BF
+          - DomainName:
+              Fn::GetAtt:
+                - nextbucket0EBCEB02
+                - RegionalDomainName
+            Id: NextjsLambdaCdkStackDistributionOrigin30EAB6881
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ""
+                  - - origin-access-identity/cloudfront/
+                    - Ref: DistributionOrigin3S3Origin24527178
+  deploynextstaticbucketAwsCliLayer6A486995:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Content:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Description: /opt/awscli/aws
+  deploynextstaticbucketCustomResource97DD2082:
+    Type: Custom::CDKBucketDeployment
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536
+          - Arn
+      SourceBucketNames:
+        - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+      SourceObjectKeys:
+        - d8a99b531712146d1442ef684d3969f902f500eb82e57437fed36831c7049bec.zip
+      DestinationBucketName:
+        Ref: nextbucket0EBCEB02
+      DestinationBucketKeyPrefix: _next/static
+      Prune: true
+      DistributionId:
+        Ref: Distribution830FAC52
+      DistributionPaths:
+        - /_next/static/*
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+  CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+                    - /*
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - nextbucket0EBCEB02
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - nextbucket0EBCEB02
+                        - Arn
+                    - /*
+          - Action:
+              - cloudfront:GetInvalidation
+              - cloudfront:CreateInvalidation
+            Effect: Allow
+            Resource: "*"
+        Version: 2012-10-17
+      PolicyName: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF
+      Roles:
+        - Ref: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265
+  CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Environment:
+        Variables:
+          AWS_CA_BUNDLE: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+      Handler: index.handler
+      Layers:
+        - Ref: deploynextstaticbucketAwsCliLayer6A486995
+      Role:
+        Fn::GetAtt:
+          - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265
+          - Arn
+      Runtime: python3.9
+      Timeout: 900
+    DependsOn:
+      - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF
+      - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265
+  deploynextpublicbucketAwsCliLayer3576F0CD:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Content:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Description: /opt/awscli/aws
+  deploynextpublicbucketCustomResourceE5B28743:
+    Type: Custom::CDKBucketDeployment
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536
+          - Arn
+      SourceBucketNames:
+        - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+      SourceObjectKeys:
+        - ea547841790f5fe5d15fb460ac30512a908af8c2933d6259faa8cbb5bc492189.zip
+      DestinationBucketName:
+        Ref: nextbucket0EBCEB02
+      DestinationBucketKeyPrefix: static
+      Prune: true
+      DistributionId:
+        Ref: Distribution830FAC52
+      DistributionPaths:
+        - /static/*
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+Outputs:
+  apiEndpoint9349E63C:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: apiC8550315
+          - .execute-api.
+          - Ref: AWS::Region
+          - .
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: apiDeploymentStageprod896C8101
+          - /
+  Nextbucket:
+    Value:
+      Ref: nextbucket0EBCEB02
+  CloudFrontURL:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Fn::GetAtt:
+              - Distribution830FAC52
+              - DomainName
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment,
+      automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk
+          bootstrap' with a recent version of the CDK CLI.
+"
+`;
