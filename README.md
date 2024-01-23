@@ -72,8 +72,8 @@ This stack creates a secret which will be used to keep Google auth configuration
 From the root of repository execute this command
 
 ```sh
-cdk deploy AuthSecret --profile dev -c TargetStack=AuthSecret
-cdk deploy AuthSecret --profile prd -c TargetStack=AuthSecret
+cdk deploy CrossAccountResources --profile dev -c TargetStack=CrossAccountResources
+cdk deploy CrossAccountResources --profile prd -c TargetStack=CrossAccountResources
 ```
 
 ### Provision database pipeline (optional)
@@ -133,7 +133,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
     "AUTHZ": "GOOGLE"
 }
 ```
-- Encode the config above to Base64 format with an online tool. Go to the `AuthSecret` stack in DEV/PRD, get the auth secret ARN from the output `CloudfrontAuthSecretArn` then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
+- Encode the config above to Base64 format with an online tool. Go to the `CrossAccountResources` stack in DEV/PRD, get the auth secret ARN from the output `CloudfrontAuthSecretArn` then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
 ```json
 { "config": "base64EcodedConfig" }
 
@@ -154,7 +154,7 @@ This project adopts the snapshot testing strategy. Under the `test` folder you w
 To update a test snapshot use the following command
 ```sh
 npm run test:update -- app-stack.test.ts
-npm run test:update -- cross-account-auth-secret.test.ts
+npm run test:update -- cross-account-resources.test.ts
 npm run test:update -- github-webhook-api-stack.test.ts
 npm run test:update -- prisma-stack.test.ts
 ```

@@ -5,7 +5,7 @@ import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { PrismaStack } from './infra/cicd/prisma-stack';
 import { GithubWebhookAPIStack } from './infra/shared/github-webhook-api-stack';
-import { AuthSecret } from './infra/shared/cross-account-auth-secret';
+import { CrossAccountResources } from './infra/shared/cross-account-resources';
 
 const app = new cdk.App();
 const env = {
@@ -77,8 +77,8 @@ if (targetStack == 'AppStack') {
   new AppStack(app, 'AppStack', {}, { env });
 }
 
-if (targetStack == 'AuthSecret') {
-  new AuthSecret(app, 'AuthSecret', { env });
+if (targetStack == 'CrossAccountResources') {
+  new CrossAccountResources(app, 'CrossAccountResources', { env });
 }
 
 app.synth();

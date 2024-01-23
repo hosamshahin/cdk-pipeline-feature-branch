@@ -956,32 +956,6 @@ Resources:
         Ref: RestApilikesimageKeyS35646FC25
       RestApiId:
         Ref: RestApi0C43BF4B
-  adminRoleFromCicdAccount27DF8F3D:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::undefined:role/
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::undefined:role/undefined-main
-        Version: 2012-10-17
-      Description: Role to grant access to target accounts
-      ManagedPolicyArns:
-        - Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - :iam::aws:policy/AWSCloudFormationFullAccess
-        - Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - :iam::aws:policy/CloudFrontFullAccess
 Outputs:
   CfnOutCloudFrontUrl:
     Description: URL for CLOUDFRONT_URL in \`frontend/.env\` file

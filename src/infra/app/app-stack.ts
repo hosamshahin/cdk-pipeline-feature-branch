@@ -38,11 +38,7 @@ export class AppStack extends cdk.Stack {
 
     const config: any = this.node.tryGetContext('config') || {};
     const accounts = config.accounts || {};
-    const currentAcct = cdk.Stack.of(this).account;
     const resourceAttr = config['resourceAttr'] || {};
-    const webhookAPILambdaRole = resourceAttr['webhookAPILambdaRole'] || '';
-    let frontEndCodeBuildStepRole = resourceAttr['frontEndCodeBuildStepRole'];
-    frontEndCodeBuildStepRole = currentAcct == accounts.DEV_ACCOUNT_ID ? frontEndCodeBuildStepRole : `${frontEndCodeBuildStepRole}-main`;
 
     // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
     this.bucket = new s3.Bucket(this, 'Bucket', {
@@ -317,28 +313,11 @@ export class AppStack extends cdk.Stack {
       description: 'Images API URL for `frontend/.env` file',
     });
 
-    // CICD pipeline will assume this role to perform the follwoing actions
-    // 1- Delete app stack when feature branch is deleted
-    // 2- Push the client artifacts to dev/prod s3 bucket
-    // 3- invalidate CloudFront cache in dev/prod accounts
-    new iam.Role(this, 'adminRoleFromCicdAccount', {
-      roleName: resourceAttr['adminRoleFromCicdAccount'],
-      assumedBy: new iam.CompositePrincipal(
-        new iam.ArnPrincipal(`arn:aws:iam::${accounts.CICD_ACCOUNT_ID}:role/${webhookAPILambdaRole}`),
-        new iam.ArnPrincipal(`arn:aws:iam::${accounts.CICD_ACCOUNT_ID}:role/${frontEndCodeBuildStepRole}`),
-      ),
-      description: 'Role to grant access to target accounts',
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'),
-        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudFrontFullAccess'),
-      ],
-    });
-
     if (props!.useRdsDataBase) {
-      const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(config.resourceAttr.databaseSecretArn));
-      const vpcId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.databaseVpcId);
+      const databaseSecret = sm.Secret.fromSecretCompleteArn(this, 'databaseSecret', cdk.Fn.importValue(resourceAttr['databaseSecretArn']));
+      const vpcId = ssm.StringParameter.valueFromLookup(this, resourceAttr['databaseVpcId']);
       const vpc = ec2.Vpc.fromLookup(this, 'VPC', { vpcId });
-      const securityGroupId = ssm.StringParameter.valueFromLookup(this, config.resourceAttr.migrationRunnerSecurityGroupId);
+      const securityGroupId = ssm.StringParameter.valueFromLookup(this, resourceAttr['migrationRunnerSecurityGroupId']);
       const securityGroup = ec2.SecurityGroup.fromLookupById(this, 'securityGroupId', securityGroupId);
 
       const conn: DatabaseConnectionProps = {

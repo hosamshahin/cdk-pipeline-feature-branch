@@ -1,11 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AuthSecret cdk-nag AwsSolutions Pack 1`] = `
+exports[`CrossAccountResources cdk-nag AwsSolutions Pack 1`] = `
 "Metadata:
   cdk_nag:
     rules_to_suppress:
       - reason: TBD reason of 10 characters or more
         id: AwsSolutions-SMG4
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-IAM4
 Resources:
   AuthSecretC13F30CE:
     Type: AWS::SecretsManager::Secret
@@ -18,6 +20,32 @@ Resources:
       Name: ""
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+  adminRoleFromCicdAccount27DF8F3D:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::undefined:role/
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::undefined:role/undefined-main
+        Version: 2012-10-17
+      Description: Role to grant access to target accounts
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/AWSCloudFormationFullAccess
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/CloudFrontFullAccess
 Outputs:
   CloudfrontAuthSecretArn:
     Value:

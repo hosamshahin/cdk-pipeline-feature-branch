@@ -2,9 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import { Annotations, Match, Template } from 'aws-cdk-lib/assertions';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as yaml from 'yaml';
-import { AppStack } from '../src/infra/app/app-stack';
+import { GithubWebhookAPIStack } from '../infra/shared/github-webhook-api-stack';
 
-test('AppStack cdk-nag AwsSolutions Pack', () => {
+test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
 
   const app = new cdk.App();
   const env = {
@@ -12,28 +12,19 @@ test('AppStack cdk-nag AwsSolutions Pack', () => {
     region: process.env.CDK_DEFAULT_REGION,
   };
 
-  const stack = new AppStack(app, 'AppStack', {}, { env });
+  const stack = new GithubWebhookAPIStack(app, 'GithubWebhookAPIStack', { env });
 
   cdk.Aspects.of(stack).add(new AwsSolutionsChecks());
 
   NagSuppressions.addStackSuppressions(stack, [
-    { id: 'AwsSolutions-CFR1', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-CFR2', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-DDB3', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-S1', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-S2', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-IAM5', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-L1', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-CFR3', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-CFR4', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-APIG1', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-APIG2', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-APIG3', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-APIG6', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-L1', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-IAM5', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-APIG4', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-COG4', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-SMG4', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-APIG2', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-APIG6', reason: 'TBD reason of 10 characters or more' },
   ]);
 
   const warnings = Annotations.fromStack(stack).findWarning(

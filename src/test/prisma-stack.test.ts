@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Annotations, Match, Template } from 'aws-cdk-lib/assertions';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as yaml from 'yaml';
-import { PrismaStack } from '../src/infra/cicd/prisma-stack';
+import { PrismaStack } from '../infra/cicd/prisma-stack';
 
 test('PrismaStack cdk-nag AwsSolutions Pack', () => {
 
@@ -23,7 +23,7 @@ test('PrismaStack cdk-nag AwsSolutions Pack', () => {
     { id: 'AwsSolutions-RDS3', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-RDS10', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-RDS11', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' }
   ]);
 
   const warnings = Annotations.fromStack(stack).findWarning(
@@ -31,7 +31,7 @@ test('PrismaStack cdk-nag AwsSolutions Pack', () => {
     Match.stringLikeRegexp('AwsSolutions-.*'),
   );
 
-  console.dir(warnings);
+  // console.dir(warnings);
   expect(warnings).toHaveLength(0);
 
   const errors = Annotations.fromStack(stack).findError(
@@ -39,7 +39,7 @@ test('PrismaStack cdk-nag AwsSolutions Pack', () => {
     Match.stringLikeRegexp('AwsSolutions-.*'),
   );
 
-  console.dir(errors);
+  // console.dir(errors);
   expect(errors).toHaveLength(0);
 
   const template = Template.fromStack(stack);
