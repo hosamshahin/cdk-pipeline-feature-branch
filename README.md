@@ -154,6 +154,7 @@ This project adopts the snapshot testing strategy. Under the `test` folder you w
 To update a test snapshot use the following command
 ```sh
 npm run test:update -- app-stack.test.ts
+npm run test:update -- app-stack-nextjs.test.ts
 npm run test:update -- cross-account-resources.test.ts
 npm run test:update -- github-webhook-api-stack.test.ts
 npm run test:update -- prisma-stack.test.ts

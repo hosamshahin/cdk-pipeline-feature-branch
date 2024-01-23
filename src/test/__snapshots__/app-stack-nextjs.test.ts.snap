@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AppStack cdk-nag AwsSolutions Pack 1`] = `
+exports[`NextjsLambdaCdkStack cdk-nag AwsSolutions Pack 1`] = `
 "Metadata:
   cdk_nag:
     rules_to_suppress:
