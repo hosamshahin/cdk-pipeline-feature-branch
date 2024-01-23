@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Annotations, Match, Template } from 'aws-cdk-lib/assertions';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as yaml from 'yaml';
-import { NextjsLambdaCdkStack } from '../infra/app/app-stack-nextjs';
+import { NextjsLambdaCdkStack } from '../src/infra/app/app-stack-nextjs';
 
 test('NextjsLambdaCdkStack cdk-nag AwsSolutions Pack', () => {
 
