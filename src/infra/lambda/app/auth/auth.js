@@ -246,7 +246,7 @@ async function fetchConfigFromSecretsManager() {
 	// Get Secrets Manager Config Key from File since we cannot use environment variables.
 	if (secretId == undefined) {
 		try {
-			secretId = 'cloudfrontAuthSecret';
+			secretId = 'cloudFrontAuthSecret';
 		} catch (err) {
 			log.error(err);
 		}
