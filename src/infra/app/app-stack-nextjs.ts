@@ -7,6 +7,9 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as sm from 'aws-cdk-lib/aws-secretsmanager';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 const path = require('node:path');
 
@@ -76,11 +79,139 @@ export class NextjsLambdaCdkStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'Next bucket', { value: nextBucket.bucketName });
 
+    const authSecret = sm.Secret.fromSecretCompleteArn(this, 'AuthSecret', cdk.Fn.importValue('CloudfrontAuthSecretArn'));
+
+    const policyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'lambda:GetFunction',
+            'lambda:UpdateFunctionCode',
+          ],
+          resources: ['*'],
+        }),
+      ],
+    });
+
+    const cloudfrontAuthPolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            'secretsmanager:GetResourcePolicy',
+            'secretsmanager:GetSecretValue',
+            'secretsmanager:DescribeSecret',
+            'secretsmanager:ListSecretVersionIds',
+          ],
+          resources: [authSecret.secretArn],
+        }),
+      ],
+    });
+
+    const cloudfrontReadOnlyAccessPolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            'acm:ListCertificates',
+            'cloudfront:DescribeFunction',
+            'cloudfront:Get*',
+            'cloudfront:List*',
+            'iam:ListServerCertificates',
+            'route53:List*',
+            'waf:ListWebACLs',
+            'waf:GetWebACL',
+            'wafv2:ListWebACLs',
+            'wafv2:GetWebACL',
+          ],
+          resources: ['*'],
+        }),
+      ],
+    });
+
+    const lambdaReadOnlyAccessPolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            'cloudformation:DescribeStacks',
+            'cloudformation:ListStackResources',
+            'cloudwatch:GetMetricData',
+            'cloudwatch:ListMetrics',
+            'ec2:DescribeSecurityGroups',
+            'ec2:DescribeSubnets',
+            'ec2:DescribeVpcs',
+            'kms:ListAliases',
+            'iam:GetPolicy',
+            'iam:GetPolicyVersion',
+            'iam:GetRole',
+            'iam:GetRolePolicy',
+            'iam:ListAttachedRolePolicies',
+            'iam:ListRolePolicies',
+            'iam:ListRoles',
+            'logs:DescribeLogGroups',
+            'lambda:Get*',
+            'lambda:List*',
+            'states:DescribeStateMachine',
+            'states:ListStateMachines',
+            'tag:GetResources',
+            'xray:GetTraceSummaries',
+            'xray:BatchGetTraces',
+          ],
+          resources: ['*'],
+        }),
+        new iam.PolicyStatement({
+          actions: [
+            'logs:DescribeLogStreams',
+            'logs:GetLogEvents',
+            'logs:FilterLogEvents',
+          ],
+          resources: ['arn:aws:logs:*:*:log-group:/aws/lambda/*'],
+        }),
+      ],
+    });
+
+    const lambdaBasicExecutionRolePolicyDocument = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          resources: ['*'],
+          actions: [
+            'logs:CreateLogGroup',
+            'logs:CreateLogStream',
+            'logs:PutLogEvents',
+          ],
+        }),
+      ],
+    });
+
+    const cloudfrontAuthRole = new iam.Role(this, 'CloudfrontAuthRole', {
+      assumedBy: new iam.CompositePrincipal(new iam.ServicePrincipal('lambda.amazonaws.com'), new iam.ServicePrincipal('edgelambda.amazonaws.com')),
+      inlinePolicies: {
+        cloudfrontAuthPolicyDocument: cloudfrontAuthPolicyDocument,
+        cloudfrontReadOnlyAccessPolicyDocument: cloudfrontReadOnlyAccessPolicyDocument,
+        lambdaReadOnlyAccessPolicyDocument: lambdaReadOnlyAccessPolicyDocument,
+        lambdaBasicExecutionRolePolicyDocument: lambdaBasicExecutionRolePolicyDocument,
+        policyDocument: policyDocument,
+      },
+    });
+
+    const cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
+      entry: require.resolve('../lambda/app/auth/auth.js'),
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5)
+    });
+
+    const version = cloudfrontAuthFunction.currentVersion;
+    const alias = new lambda.Alias(this, 'LambdaAlias', { aliasName: 'Current', version });
+
     const cloudfrontDistribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: new origins.RestApiOrigin(api),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        edgeLambdas: [{
+          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+          functionVersion: alias.version,
+          includeBody: false,
+        }],
       },
       additionalBehaviors: {
         '_next/static/*': {
