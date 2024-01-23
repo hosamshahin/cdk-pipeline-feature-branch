@@ -3,6 +3,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cpl from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
 import { AppStage } from '../app/app-stage';
+// import { AppStageNextJs } from '../app/app-stage-nextjs';
 
 export interface PipelineProps {
   readonly deploymentEnv: string;
@@ -39,6 +40,9 @@ export class Pipeline extends Construct {
         input,
         commands: [
           'npm install projen',
+          'cd $CODEBUILD_SRC_DIR/src/client_nextjs',
+          'npm install',
+          'npm run build',
           'cd $CODEBUILD_SRC_DIR/src/infra/lambda/app/auth && npm install --omit=dev',
           'cd $CODEBUILD_SRC_DIR && npm run test && npx cdk synth -c TargetStack=Pipeline',
         ],
@@ -49,10 +53,16 @@ export class Pipeline extends Construct {
       env: { account: accounts[props.deploymentAcct], region: props.region },
     });
 
+    // const appStageNextJs = new AppStageNextJs(this, 'AppStageNextJs', {
+    //   env: { account: accounts[props.deploymentAcct], region: props.region },
+    // });
+
     const pipelineStage = pipeline.addStage(appStage);
+    // const pipelineStageNextjs = pipeline.addStage(appStageNextJs);
 
     if (props.preApprovalRequired) {
       pipelineStage.addPre(new cpl.ManualApprovalStep('approval'));
+      // pipelineStageNextjs.addPre(new cpl.ManualApprovalStep('approval'));
     }
 
     const codeBuildStep = new cpl.CodeBuildStep('DeployFrontEnd', {

@@ -6,7 +6,7 @@
       "githubRepo": "cdk-pipeline-feature-branch",
       "githubBranch": "main",
       "region": "us-east-1",
-      "connection_arn": "arn:aws:codestar-connections:us-east-1:690901106489:connection/947df6a7-dcd6-4c05-a53c-1173466436d3",
+      "connection_arn": "arn:aws:codestar-connections:us-east-1:690901106489:connection/a5f54475-d8e1-4f05-a10e-34349660edce",
       "accounts": {
         "CICD_ACCOUNT_ID": "690901106489",
         "DEV_ACCOUNT_ID": "864571753663",

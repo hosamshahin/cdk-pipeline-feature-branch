@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { AppStack } from './app-stack';
+import { NextjsLambdaCdkStack } from './app-stack-nextjs';
 
 export class AppStage extends cdk.Stage {
   public readonly cfnOutApiImagesUrl: cdk.CfnOutput;
@@ -15,6 +16,7 @@ export class AppStage extends cdk.Stage {
     super(scope, id, props);
 
     const appStack = new AppStack(this, 'AppStack', {}, props);
+    new NextjsLambdaCdkStack(this, 'NextjsLambdaCdkStack');
 
     this.cfnOutApiImagesUrl = appStack.cfnOutApiImagesUrl;
     this.cfnOutCloudFrontUrl = appStack.cfnOutCloudFrontUrl;
