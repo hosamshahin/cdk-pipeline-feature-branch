@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Annotations, Match, Template } from 'aws-cdk-lib/assertions';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as yaml from 'yaml';
-import { GithubWebhookAPIStack } from '../infra/shared/github-webhook-api-stack';
+import { CrossAccountResources } from '../src/infra/shared/cross-account-resources';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 let fromAssetMock
@@ -46,7 +46,7 @@ afterAll(() => {
 //   fromImageAssetMock!.mockRestore()
 // })
 
-test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
+test('CrossAccountResources cdk-nag AwsSolutions Pack', () => {
 
   const app = new cdk.App();
   const env = {
@@ -54,19 +54,13 @@ test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
     region: process.env.CDK_DEFAULT_REGION,
   };
 
-  const stack = new GithubWebhookAPIStack(app, 'GithubWebhookAPIStack', { env });
+  const stack = new CrossAccountResources(app, 'CrossAccountResources', { env });
 
   cdk.Aspects.of(stack).add(new AwsSolutionsChecks());
 
   NagSuppressions.addStackSuppressions(stack, [
-    { id: 'AwsSolutions-APIG3', reason: 'TBD reason of 10 characters or more' },
+    { id: 'AwsSolutions-SMG4', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-L1', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-IAM5', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-APIG4', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-COG4', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-APIG2', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-APIG6', reason: 'TBD reason of 10 characters or more' },
   ]);
 
   const warnings = Annotations.fromStack(stack).findWarning(
@@ -74,7 +68,7 @@ test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
     Match.stringLikeRegexp('AwsSolutions-.*'),
   );
 
-  // console.dir(warnings);
+  // console.dir(warnings)
   expect(warnings).toHaveLength(0);
 
   const errors = Annotations.fromStack(stack).findError(
@@ -82,10 +76,9 @@ test('GithubWebhookAPIStack cdk-nag AwsSolutions Pack', () => {
     Match.stringLikeRegexp('AwsSolutions-.*'),
   );
 
-  // console.dir(errors);
+  // console.dir(errors)
   expect(errors).toHaveLength(0);
 
   const template = Template.fromStack(stack);
   expect(yaml.stringify(template)).toMatchSnapshot();
-
 });
