@@ -965,11 +965,6 @@ Resources:
       RestApiId:
         Ref: RestApi0C43BF4B
 Outputs:
-  CloudfrontAuthSecretArn:
-    Value:
-      Ref: AuthSecretC13F30CE
-    Export:
-      Name: CloudfrontAuthSecretArn
   CfnOutCloudFrontUrl:
     Description: URL for CLOUDFRONT_URL in \`frontend/.env\` file
     Value:

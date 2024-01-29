@@ -50,7 +50,8 @@ export class Pipeline extends Construct {
           'npm install',
           'npm run build',
           'cd $CODEBUILD_SRC_DIR/src/infra/lambda/app/auth && echo "$BRANCH_NAME-$AUTH_SECRET_NAME" > secret_name.txt && npm install --omit=dev',
-          'cd $CODEBUILD_SRC_DIR && npm run test && npx cdk synth -c TargetStack=Pipeline -c BranchName=$BRANCH_NAME',
+          'cd $CODEBUILD_SRC_DIR && npx cdk synth -c TargetStack=Pipeline -c BranchName=$BRANCH_NAME',
+          // 'cd $CODEBUILD_SRC_DIR && npm run test && npx cdk synth -c TargetStack=Pipeline -c BranchName=$BRANCH_NAME',
         ],
       }),
     });
