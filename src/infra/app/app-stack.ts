@@ -87,11 +87,6 @@ export class AppStack extends cdk.Stack {
       },
     });
 
-    new cdk.CfnOutput(this, 'CloudfrontAuthSecretArn', {
-      exportName: 'CloudfrontAuthSecretArn',
-      value: authSecret.secretArn,
-    });
-
     const policyDocument = new iam.PolicyDocument({
       statements: [
         new iam.PolicyStatement({
