@@ -246,7 +246,8 @@ async function fetchConfigFromSecretsManager() {
 	// Get Secrets Manager Config Key from File since we cannot use environment variables.
 	if (secretId == undefined) {
 		try {
-			secretId = 'cloudFrontAuthSecret';
+			secretId = fs.readFileSync('./secret_name.txt', 'utf-8');
+			secretId = secretId.replace(/(\r\n|\n|\r)/gm, '');
 		} catch (err) {
 			log.error(err);
 		}

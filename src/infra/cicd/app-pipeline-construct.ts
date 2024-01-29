@@ -13,6 +13,7 @@ export interface PipelineProps {
   readonly githubRepo: string;
   readonly githubBranch: string;
   readonly preApprovalRequired: boolean | false;
+  readonly branchName: string;
 }
 
 export class Pipeline extends Construct {
@@ -22,7 +23,8 @@ export class Pipeline extends Construct {
     const config: any = this.node.tryGetContext('config') || {};
     const accounts = config.accounts || {};
     const connectionArn = config.connection_arn;
-    const resourceAttr = config.resourceAttr || {};
+    const resourceAttr = config['resourceAttr'] || {};
+    const authSecretName = resourceAttr['authSecretName'] || '';
     const adminRoleFromCicdAccount = resourceAttr.adminRoleFromCicdAccount;
     const frontEndCodeBuildStepRole = resourceAttr.frontEndCodeBuildStepRole;
 
@@ -38,24 +40,24 @@ export class Pipeline extends Construct {
       pipelineName: `Pipeline-${props.deploymentEnv}`,
       synth: new cpl.ShellStep('Synth', {
         input,
+        env: {
+          BRANCH_NAME: input.sourceAttribute('BranchName'),
+          AUTH_SECRET_NAME: authSecretName,
+        },
         commands: [
           'npm install projen',
           'cd $CODEBUILD_SRC_DIR/src/client_nextjs',
           'npm install',
           'npm run build',
-          'cd $CODEBUILD_SRC_DIR/src/infra/lambda/app/auth && npm install --omit=dev',
-          'cd $CODEBUILD_SRC_DIR && npm run test && npx cdk synth -c TargetStack=Pipeline',
+          'cd $CODEBUILD_SRC_DIR/src/infra/lambda/app/auth && echo "$BRANCH_NAME-$AUTH_SECRET_NAME" > secret_name.txt && npm install --omit=dev',
+          'cd $CODEBUILD_SRC_DIR && npm run test && npx cdk synth -c TargetStack=Pipeline -c BranchName=$BRANCH_NAME',
         ],
       }),
     });
 
-    const appStage = new AppStage(this, 'AppStage', {
+    const appStage = new AppStage(this, 'AppStage', { branchName: props.branchName }, {
       env: { account: accounts[props.deploymentAcct], region: props.region },
     });
-
-    // const appStageNextJs = new AppStageNextJs(this, 'AppStageNextJs', {
-    //   env: { account: accounts[props.deploymentAcct], region: props.region },
-    // });
 
     const pipelineStage = pipeline.addStage(appStage);
     // const pipelineStageNextjs = pipeline.addStage(appStageNextJs);

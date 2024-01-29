@@ -20,6 +20,7 @@ const dbPipelineBranch = resourceAttr['dbPipelineBranch'];
 const targetStack = app.node.tryGetContext('TargetStack');
 
 if (targetStack == 'Pipeline') {
+  const branchName = app.node.tryGetContext('BranchName');
   const pipeline = new cdk.Stack(app, 'Pipeline', { env });
   new Pipeline(pipeline, 'Prd', {
     deploymentEnv: 'prd',
@@ -29,6 +30,7 @@ if (targetStack == 'Pipeline') {
     githubRepo: config.githubRepo,
     githubBranch: config.githubBranch,
     preApprovalRequired: true,
+    branchName
   });
 
   new Pipeline(pipeline, 'cicd', {
@@ -39,6 +41,7 @@ if (targetStack == 'Pipeline') {
     githubRepo: config.githubRepo,
     githubBranch: 'not_exist_branch_to_avoid_running',
     preApprovalRequired: false,
+    branchName
   });
 }
 
@@ -74,7 +77,7 @@ if (targetStack == 'PrismaStack') {
 }
 
 if (targetStack == 'AppStack') {
-  new AppStack(app, 'AppStack', {}, { env });
+  new AppStack(app, 'AppStack', { branchName: 'main' }, { env });
 }
 
 if (targetStack == 'CrossAccountResources') {

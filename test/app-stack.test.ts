@@ -54,7 +54,7 @@ test('AppStack cdk-nag AwsSolutions Pack', () => {
     region: process.env.CDK_DEFAULT_REGION,
   };
 
-  const stack = new AppStack(app, 'AppStack', {}, { env });
+  const stack = new AppStack(app, 'AppStack', {branchName: 'main'}, { env });
 
   cdk.Aspects.of(stack).add(new AwsSolutionsChecks());
 
