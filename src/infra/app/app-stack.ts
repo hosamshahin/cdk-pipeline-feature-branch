@@ -209,7 +209,7 @@ export class NextjsAppStack extends cdk.Stack {
     });
 
     const cloudfrontAuthFunction = new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
-      entry: require.resolve('../lambda/app/auth/auth.js'),
+      entry: require.resolve('../lambda/app/auth'),
       role: cloudfrontAuthRole,
       timeout: cdk.Duration.seconds(5)
     });
