@@ -1,81 +1,37 @@
 import * as cdk from 'aws-cdk-lib';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import { Construct } from 'constructs';
+
+import * as apiGateway from 'aws-cdk-lib/aws-apigateway';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as sm from 'aws-cdk-lib/aws-secretsmanager';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as sm from 'aws-cdk-lib/aws-secretsmanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Trigger } from 'aws-cdk-lib/triggers';
-import { Construct } from 'constructs';
 import { DockerPrismaFunction, DatabaseConnectionProps } from '../shared/docker-prisma-construct';
 
-export interface AppStackProps {
+
+const path = require('node:path');
+
+export interface NextjsAppStackProps {
   branchName: string;
   useRdsDataBase?: boolean | false;
 }
 
-export class AppStack extends cdk.Stack {
-  public readonly bucket: s3.Bucket;
-  public readonly distribution: cloudfront.Distribution;
-  public readonly cfnOutCloudFrontUrl: cdk.CfnOutput;
-  public readonly cfnOutBucketName: cdk.CfnOutput;
-  public readonly cfnOutBucketArn: cdk.CfnOutput;
-  public readonly cfnOutDistributionId: cdk.CfnOutput;
-  public readonly restApi: apigateway.LambdaRestApi;
-  public readonly cfnOutApiImagesUrl: cdk.CfnOutput;
-  public readonly cfnOutApiLikesUrl: cdk.CfnOutput;
 
-  constructor(scope: Construct,
-    id: string,
-    props: AppStackProps,
-    stackProps?: cdk.StackProps) {
+export class NextjsAppStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: NextjsAppStackProps, stackProps?: cdk.StackProps) {
     super(scope, id, stackProps);
 
     const config: any = this.node.tryGetContext('config') || {};
-    const accounts = config.accounts || {};
     const resourceAttr = config['resourceAttr'] || {};
     const authSecretName = resourceAttr['authSecretName'] || '';
-
-    // Remediating AwsSolutions-S10 by enforcing SSL on the bucket.
-    this.bucket = new s3.Bucket(this, 'Bucket', {
-      enforceSSL: true,
-      cors: [
-        {
-          allowedMethods: [s3.HttpMethods.POST],
-          allowedOrigins: ['*'],
-        },
-      ],
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
-
-    this.bucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          's3:GetObject',
-          's3:PutObject',
-          's3:PutObjectAcl',
-        ],
-        principals: [new iam.AnyPrincipal()],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalAccount': accounts.CICD_ACCOUNT_ID,
-          },
-        },
-        effect: iam.Effect.ALLOW,
-        resources: [`${this.bucket.bucketArn}/*`],
-      }),
-    );
-
-    /**
-     * CloudFront Distribution and lambda edge
-     */
 
     const authSecret = new sm.Secret(this, 'AuthSecret', {
       secretName: `${props.branchName}-${authSecretName}`,
@@ -86,6 +42,59 @@ export class AppStack extends cdk.Stack {
         includeSpace: false,
       },
     });
+
+    const lambdaAdapterLayer = lambda.LayerVersion.fromLayerVersionArn(
+      this,
+      'LambdaAdapterLayerX86',
+      `arn:aws:lambda:${this.region}:753240598075:layer:LambdaAdapterLayerX86:3`
+    );
+
+    const nextCdkFunction = new lambda.Function(this, 'NextCdkFunction', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'run.sh',
+      code: lambda.Code.fromAsset(path.join(
+        __dirname,
+        '../../client_nextjs/.next/',
+        'standalone')
+      ),
+      architecture: lambda.Architecture.X86_64,
+      environment: {
+        'AWS_LAMBDA_EXEC_WRAPPER': '/opt/bootstrap',
+        'RUST_LOG': 'info',
+        'PORT': '8080',
+      },
+      layers: [lambdaAdapterLayer],
+    });
+
+    const api = new apiGateway.RestApi(this, "api", {
+      defaultCorsPreflightOptions: {
+        allowOrigins: apiGateway.Cors.ALL_ORIGINS,
+        allowMethods: apiGateway.Cors.ALL_METHODS
+      }
+    });
+
+    const nextCdkFunctionIntegration = new apiGateway.LambdaIntegration(
+      nextCdkFunction,
+      {
+        allowTestInvoke: false
+      }
+    );
+    api.root.addMethod('ANY', nextCdkFunctionIntegration);
+
+    api.root.addProxy({
+      defaultIntegration: new apiGateway.LambdaIntegration(nextCdkFunction, {
+        allowTestInvoke: false
+      }),
+      anyMethod: true,
+    });
+
+    const nextBucket = new s3.Bucket(this, 'next-bucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      versioned: true
+    });
+
+    new cdk.CfnOutput(this, 'Next bucket', { value: nextBucket.bucketName });
 
     const policyDocument = new iam.PolicyDocument({
       statements: [
@@ -208,13 +217,11 @@ export class AppStack extends cdk.Stack {
     const version = cloudfrontAuthFunction.currentVersion;
     const alias = new lambda.Alias(this, 'LambdaAlias', { aliasName: 'Current', version });
 
-    this.distribution = new cloudfront.Distribution(this, 'Distribution', {
-      defaultRootObject: 'index.html',
+    const cloudfrontDistribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new cloudfrontOrigins.S3Origin(this.bucket, {
-          originPath: '/frontend',
-        }),
+        origin: new origins.RestApiOrigin(api),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         edgeLambdas: [{
           eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
           functionVersion: alias.version,
@@ -222,105 +229,38 @@ export class AppStack extends cdk.Stack {
         }],
       },
       additionalBehaviors: {
-        '/uploads/*': {
-          origin: new cloudfrontOrigins.S3Origin(this.bucket, {
-            originPath: '/',
-          }),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        '_next/static/*': {
+          origin: new origins.S3Origin(nextBucket),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
+        },
+        'static/*': {
+          origin: new origins.S3Origin(nextBucket),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
         },
       },
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2018,
+      // logBucket: nextLoggingBucket,
+      // logFilePrefix: 'cloudfront-access-logs',
     });
 
-    this.cfnOutCloudFrontUrl = new cdk.CfnOutput(this, 'CfnOutCloudFrontUrl', {
-      value: `https://${this.distribution.distributionDomainName}`,
-      description: 'URL for CLOUDFRONT_URL in `frontend/.env` file',
+    new cdk.CfnOutput(this, 'CloudFront URL', {
+      value: `https://${cloudfrontDistribution.distributionDomainName}`
     });
 
-    this.cfnOutDistributionId = new cdk.CfnOutput(this, 'CfnOutDistributionId', {
-      value: this.distribution.distributionId,
-      description: 'CloudFront Distribution Id',
+    new s3deploy.BucketDeployment(this, 'deploy-next-static-bucket', {
+      sources: [s3deploy.Source.asset('./src/client_nextjs/.next/static/')],
+      destinationBucket: nextBucket,
+      destinationKeyPrefix: '_next/static',
+      distribution: cloudfrontDistribution,
+      distributionPaths: ['/_next/static/*']
     });
 
-    this.cfnOutBucketName = new cdk.CfnOutput(this, 'CfnOutBucketName', {
-      value: this.bucket.bucketName,
-      description: 'Website Hosting Bucket Name',
-    });
-
-    this.cfnOutBucketArn = new cdk.CfnOutput(this, 'cfnOutBucketArn', {
-      value: this.bucket.bucketArn,
-      description: 'Website Hosting Bucket Name',
-    });
-
-    const likesTable = new dynamo.Table(this, 'LikesTable', {
-      billingMode: dynamo.BillingMode.PAY_PER_REQUEST,
-      partitionKey: {
-        name: 'imageKeyS3',
-        type: dynamo.AttributeType.STRING,
-      },
-    });
-
-    let lambdaApiHandlerPublic = new lambdaNodeJs.NodejsFunction(this, 'ApiHandlerPublic', {
-      entry: require.resolve('../lambda/app/coffee-listing-api-public'),
-      environment: {
-        BUCKET_NAME: this.bucket.bucketName,
-        BUCKER_UPLOAD_FOLDER_NAME: 'uploads',
-      },
-    });
-
-    this.bucket.grantReadWrite(lambdaApiHandlerPublic);
-
-    let lambdaApiHandlerPrivate = new lambdaNodeJs.NodejsFunction(this, 'ApiHandlerPrivate', {
-      entry: require.resolve('../lambda/app/coffee-listing-api-private'),
-      environment: {
-        DYNAMODB_TABLE_LIKES_NAME: likesTable.tableName,
-      },
-    });
-
-    lambdaApiHandlerPrivate.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['dynamodb:Query', 'dynamodb:UpdateItem'],
-        resources: [likesTable.tableArn],
-      }),
-    );
-
-    let restApi = new apigateway.LambdaRestApi(this, 'RestApi', {
-      handler: lambdaApiHandlerPublic,
-      proxy: false,
-    });
-
-    let apiImages = restApi.root.addResource('images', {
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-      },
-    });
-
-    apiImages.addMethod('GET');
-    apiImages.addMethod('POST');
-
-    let apiLikes = restApi.root.addResource('likes', {
-      defaultIntegration: new apigateway.LambdaIntegration(lambdaApiHandlerPrivate),
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-      },
-    });
-
-    apiLikes.addMethod('POST');
-
-    let apiLikesImage = apiLikes.addResource('{imageKeyS3}');
-    apiLikesImage.addMethod('GET');
-
-    this.restApi = restApi;
-
-    this.cfnOutApiLikesUrl = new cdk.CfnOutput(this, 'CfnOutApiLikesUrl', {
-      value: restApi.urlForPath('/likes'),
-      description: 'Likes API URL for `frontend/.env` file',
-    });
-
-    this.cfnOutApiImagesUrl = new cdk.CfnOutput(this, 'CfnOutApiImagesUrl', {
-      value: restApi.urlForPath('/images'),
-      description: 'Images API URL for `frontend/.env` file',
+    new s3deploy.BucketDeployment(this, 'deploy-next-public-bucket', {
+      sources: [s3deploy.Source.asset('./src/client_nextjs/public/static/')],
+      destinationBucket: nextBucket,
+      destinationKeyPrefix: 'static',
+      distribution: cloudfrontDistribution,
+      distributionPaths: ['/static/*']
     });
 
     if (props!.useRdsDataBase) {

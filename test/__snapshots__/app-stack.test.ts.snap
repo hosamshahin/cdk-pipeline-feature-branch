@@ -5,31 +5,21 @@ exports[`AppStack cdk-nag AwsSolutions Pack 1`] = `
   cdk_nag:
     rules_to_suppress:
       - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-APIG3
+      - reason: TBD reason of 10 characters or more
         id: AwsSolutions-CFR1
       - reason: TBD reason of 10 characters or more
         id: AwsSolutions-CFR2
       - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-DDB3
-      - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-S1
-      - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-S2
+        id: AwsSolutions-SMG4
       - reason: TBD reason of 10 characters or more
         id: AwsSolutions-IAM4
       - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-IAM5
-      - reason: TBD reason of 10 characters or more
         id: AwsSolutions-L1
-      - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-CFR3
-      - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-CFR4
-      - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-APIG1
       - reason: TBD reason of 10 characters or more
         id: AwsSolutions-APIG2
       - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-APIG3
+        id: AwsSolutions-APIG1
       - reason: TBD reason of 10 characters or more
         id: AwsSolutions-APIG6
       - reason: TBD reason of 10 characters or more
@@ -37,160 +27,16 @@ exports[`AppStack cdk-nag AwsSolutions Pack 1`] = `
       - reason: TBD reason of 10 characters or more
         id: AwsSolutions-COG4
       - reason: TBD reason of 10 characters or more
-        id: AwsSolutions-SMG4
+        id: AwsSolutions-IAM5
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-S1
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-S10
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-CFR3
+      - reason: TBD reason of 10 characters or more
+        id: AwsSolutions-CFR4
 Resources:
-  Bucket83908E77:
-    Type: AWS::S3::Bucket
-    Properties:
-      CorsConfiguration:
-        CorsRules:
-          - AllowedMethods:
-              - POST
-            AllowedOrigins:
-              - "*"
-      Tags:
-        - Key: aws-cdk:auto-delete-objects
-          Value: "true"
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-  BucketPolicyE9A3008A:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket:
-        Ref: Bucket83908E77
-      PolicyDocument:
-        Statement:
-          - Action: s3:*
-            Condition:
-              Bool:
-                aws:SecureTransport: "false"
-            Effect: Deny
-            Principal:
-              AWS: "*"
-            Resource:
-              - Fn::GetAtt:
-                  - Bucket83908E77
-                  - Arn
-              - Fn::Join:
-                  - ""
-                  - - Fn::GetAtt:
-                        - Bucket83908E77
-                        - Arn
-                    - /*
-          - Action:
-              - s3:PutBucketPolicy
-              - s3:GetBucket*
-              - s3:List*
-              - s3:DeleteObject*
-            Effect: Allow
-            Principal:
-              AWS:
-                Fn::GetAtt:
-                  - CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092
-                  - Arn
-            Resource:
-              - Fn::GetAtt:
-                  - Bucket83908E77
-                  - Arn
-              - Fn::Join:
-                  - ""
-                  - - Fn::GetAtt:
-                        - Bucket83908E77
-                        - Arn
-                    - /*
-          - Action:
-              - s3:GetObject
-              - s3:PutObject
-              - s3:PutObjectAcl
-            Condition:
-              StringEquals: {}
-            Effect: Allow
-            Principal:
-              AWS: "*"
-            Resource:
-              Fn::Join:
-                - ""
-                - - Fn::GetAtt:
-                      - Bucket83908E77
-                      - Arn
-                  - /*
-          - Action: s3:GetObject
-            Effect: Allow
-            Principal:
-              CanonicalUser:
-                Fn::GetAtt:
-                  - DistributionOrigin1S3Origin5F5C0696
-                  - S3CanonicalUserId
-            Resource:
-              Fn::Join:
-                - ""
-                - - Fn::GetAtt:
-                      - Bucket83908E77
-                      - Arn
-                  - /*
-          - Action: s3:GetObject
-            Effect: Allow
-            Principal:
-              CanonicalUser:
-                Fn::GetAtt:
-                  - DistributionOrigin2S3OriginE484D4BF
-                  - S3CanonicalUserId
-            Resource:
-              Fn::Join:
-                - ""
-                - - Fn::GetAtt:
-                      - Bucket83908E77
-                      - Arn
-                  - /*
-        Version: 2012-10-17
-  BucketAutoDeleteObjectsCustomResourceBAFD23C2:
-    Type: Custom::S3AutoDeleteObjects
-    Properties:
-      ServiceToken:
-        Fn::GetAtt:
-          - CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F
-          - Arn
-      BucketName:
-        Ref: Bucket83908E77
-    DependsOn:
-      - BucketPolicyE9A3008A
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-  CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-      ManagedPolicyArns:
-        - Fn::Sub: arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket:
-          Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
-        S3Key: b7f33614a69548d6bafe224d751a7ef238cde19097415e553fe8b63a4c8fd8a6.zip
-      Timeout: 900
-      MemorySize: 128
-      Handler: index.handler
-      Role:
-        Fn::GetAtt:
-          - CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092
-          - Arn
-      Runtime: nodejs18.x
-      Description:
-        Fn::Join:
-          - ""
-          - - "Lambda function for auto-deleting objects in "
-            - Ref: Bucket83908E77
-            - " S3 bucket."
-    DependsOn:
-      - CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092
   AuthSecretC13F30CE:
     Type: AWS::SecretsManager::Secret
     Properties:
@@ -202,6 +48,323 @@ Resources:
       Name: main-
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+  NextCdkFunctionServiceRole5A77F620:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  NextCdkFunctionF5F3BB9E:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - x86_64
+      Code:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          RUST_LOG: info
+          PORT: "8080"
+      Handler: run.sh
+      Layers:
+        - Fn::Join:
+            - ""
+            - - "arn:aws:lambda:"
+              - Ref: AWS::Region
+              - :753240598075:layer:LambdaAdapterLayerX86:3
+      Role:
+        Fn::GetAtt:
+          - NextCdkFunctionServiceRole5A77F620
+          - Arn
+      Runtime: nodejs16.x
+    DependsOn:
+      - NextCdkFunctionServiceRole5A77F620
+  apiC8550315:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: api
+  apiCloudWatchRoleAC81D93E:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  apiAccount57E28B43:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - apiCloudWatchRoleAC81D93E
+          - Arn
+    DependsOn:
+      - apiC8550315
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  apiDeployment149F12941e50a47e57a3cdd2bdc8a9a0fb55452e:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Automatically created by the RestApi construct
+      RestApiId:
+        Ref: apiC8550315
+    DependsOn:
+      - apiproxyANY7F13F09C
+      - apiproxyOPTIONSDEB09BE6
+      - apiproxy4EA44110
+      - apiANYB3DF8C3C
+      - apiOPTIONS5A1027A6
+  apiDeploymentStageprod896C8101:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId:
+        Ref: apiDeployment149F12941e50a47e57a3cdd2bdc8a9a0fb55452e
+      RestApiId:
+        Ref: apiC8550315
+      StageName: prod
+    DependsOn:
+      - apiAccount57E28B43
+  apiOPTIONS5A1027A6:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
+                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      RestApiId:
+        Ref: apiC8550315
+  apiANYApiPermissionAppStackapi7DFFE892ANY635218F0:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - NextCdkFunctionF5F3BB9E
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: apiC8550315
+            - /
+            - Ref: apiDeploymentStageprod896C8101
+            - /*/
+  apiANYB3DF8C3C:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - NextCdkFunctionF5F3BB9E
+                  - Arn
+              - /invocations
+      ResourceId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      RestApiId:
+        Ref: apiC8550315
+  apiproxy4EA44110:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      PathPart: "{proxy+}"
+      RestApiId:
+        Ref: apiC8550315
+  apiproxyOPTIONSDEB09BE6:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
+                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: apiproxy4EA44110
+      RestApiId:
+        Ref: apiC8550315
+  apiproxyANYApiPermissionAppStackapi7DFFE892ANYproxy92DFF947:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - NextCdkFunctionF5F3BB9E
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: apiC8550315
+            - /
+            - Ref: apiDeploymentStageprod896C8101
+            - /*/*
+  apiproxyANY7F13F09C:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - NextCdkFunctionF5F3BB9E
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: apiproxy4EA44110
+      RestApiId:
+        Ref: apiC8550315
+  nextbucket0EBCEB02:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: aws-cdk:cr-owned:_next/static:7a9895bb
+          Value: "true"
+        - Key: aws-cdk:cr-owned:static:d93121ec
+          Value: "true"
+      VersioningConfiguration:
+        Status: Enabled
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  nextbucketPolicy27F4BDB2:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: nextbucket0EBCEB02
+      PolicyDocument:
+        Statement:
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - DistributionOrigin2S3OriginE484D4BF
+                  - S3CanonicalUserId
+            Resource:
+              Fn::Join:
+                - ""
+                - - Fn::GetAtt:
+                      - nextbucket0EBCEB02
+                      - Arn
+                  - /*
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - DistributionOrigin3S3Origin24527178
+                  - S3CanonicalUserId
+            Resource:
+              Fn::Join:
+                - ""
+                - - Fn::GetAtt:
+                      - nextbucket0EBCEB02
+                      - Arn
+                  - /*
+        Version: 2012-10-17
   CloudfrontAuthRole247E2116:
     Type: AWS::IAM::Role
     Properties:
@@ -331,16 +494,16 @@ Resources:
           - CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715
           - Version
       Name: Current
-  DistributionOrigin1S3Origin5F5C0696:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: Identity for AppStackDistributionOrigin1FA502580
   DistributionOrigin2S3OriginE484D4BF:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: Identity for AppStackDistributionOrigin26F155732
+  DistributionOrigin3S3Origin24527178:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Identity for AppStackDistributionOrigin3C322F6AC
   Distribution830FAC52:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -348,11 +511,16 @@ Resources:
         CacheBehaviors:
           - CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
             Compress: true
-            PathPattern: /uploads/*
+            PathPattern: _next/static/*
             TargetOriginId: AppStackDistributionOrigin26F155732
-            ViewerProtocolPolicy: redirect-to-https
+            ViewerProtocolPolicy: https-only
+          - CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            Compress: true
+            PathPattern: static/*
+            TargetOriginId: AppStackDistributionOrigin3C322F6AC
+            ViewerProtocolPolicy: https-only
         DefaultCacheBehavior:
-          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
           Compress: true
           LambdaFunctionAssociations:
             - EventType: viewer-request
@@ -361,48 +529,101 @@ Resources:
                 Ref: CloudfrontAuthFunctionCurrentVersion3D197BFE7bf9d876d11d706cbd82a93c90bdd715
           TargetOriginId: AppStackDistributionOrigin1FA502580
           ViewerProtocolPolicy: redirect-to-https
-        DefaultRootObject: index.html
         Enabled: true
         HttpVersion: http2
         IPV6Enabled: true
         Origins:
-          - DomainName:
-              Fn::GetAtt:
-                - Bucket83908E77
-                - RegionalDomainName
+          - CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            DomainName:
+              Fn::Select:
+                - 2
+                - Fn::Split:
+                    - /
+                    - Fn::Join:
+                        - ""
+                        - - https://
+                          - Ref: apiC8550315
+                          - .execute-api.
+                          - Ref: AWS::Region
+                          - .
+                          - Ref: AWS::URLSuffix
+                          - /
+                          - Ref: apiDeploymentStageprod896C8101
+                          - /
             Id: AppStackDistributionOrigin1FA502580
-            OriginPath: /frontend
-            S3OriginConfig:
-              OriginAccessIdentity:
-                Fn::Join:
-                  - ""
-                  - - origin-access-identity/cloudfront/
-                    - Ref: DistributionOrigin1S3Origin5F5C0696
+            OriginPath:
+              Fn::Join:
+                - ""
+                - - /
+                  - Fn::Select:
+                      - 3
+                      - Fn::Split:
+                          - /
+                          - Fn::Join:
+                              - ""
+                              - - https://
+                                - Ref: apiC8550315
+                                - .execute-api.
+                                - Ref: AWS::Region
+                                - .
+                                - Ref: AWS::URLSuffix
+                                - /
+                                - Ref: apiDeploymentStageprod896C8101
+                                - /
           - DomainName:
               Fn::GetAtt:
-                - Bucket83908E77
+                - nextbucket0EBCEB02
                 - RegionalDomainName
             Id: AppStackDistributionOrigin26F155732
-            OriginPath: ""
             S3OriginConfig:
               OriginAccessIdentity:
                 Fn::Join:
                   - ""
                   - - origin-access-identity/cloudfront/
                     - Ref: DistributionOrigin2S3OriginE484D4BF
-  LikesTable9511B0A4:
-    Type: AWS::DynamoDB::Table
+          - DomainName:
+              Fn::GetAtt:
+                - nextbucket0EBCEB02
+                - RegionalDomainName
+            Id: AppStackDistributionOrigin3C322F6AC
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ""
+                  - - origin-access-identity/cloudfront/
+                    - Ref: DistributionOrigin3S3Origin24527178
+  deploynextstaticbucketAwsCliLayer6A486995:
+    Type: AWS::Lambda::LayerVersion
     Properties:
-      AttributeDefinitions:
-        - AttributeName: imageKeyS3
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: imageKeyS3
-          KeyType: HASH
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-  ApiHandlerPublicServiceRoleD6C6258E:
+      Content:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Description: /opt/awscli/aws
+  deploynextstaticbucketCustomResource97DD2082:
+    Type: Custom::CDKBucketDeployment
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536
+          - Arn
+      SourceBucketNames:
+        - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+      SourceObjectKeys:
+        - d8a99b531712146d1442ef684d3969f902f500eb82e57437fed36831c7049bec.zip
+      DestinationBucketName:
+        Ref: nextbucket0EBCEB02
+      DestinationBucketKeyPrefix: _next/static
+      Prune: true
+      DistributionId:
+        Ref: Distribution830FAC52
+      DistributionPaths:
+        - /_next/static/*
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+  CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -418,11 +639,30 @@ Resources:
             - - "arn:"
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  ApiHandlerPublicServiceRoleDefaultPolicy2FBCFCB8:
+  CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
         Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+                    - /*
           - Action:
               - s3:GetObject*
               - s3:GetBucket*
@@ -437,73 +677,24 @@ Resources:
             Effect: Allow
             Resource:
               - Fn::GetAtt:
-                  - Bucket83908E77
+                  - nextbucket0EBCEB02
                   - Arn
               - Fn::Join:
                   - ""
                   - - Fn::GetAtt:
-                        - Bucket83908E77
+                        - nextbucket0EBCEB02
                         - Arn
                     - /*
-        Version: 2012-10-17
-      PolicyName: ApiHandlerPublicServiceRoleDefaultPolicy2FBCFCB8
-      Roles:
-        - Ref: ApiHandlerPublicServiceRoleD6C6258E
-  ApiHandlerPublic61F4B222:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: bucketName
-        S3Key: objectKey
-      Environment:
-        Variables:
-          BUCKET_NAME:
-            Ref: Bucket83908E77
-          BUCKER_UPLOAD_FOLDER_NAME: uploads
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      Handler: index.handler
-      Role:
-        Fn::GetAtt:
-          - ApiHandlerPublicServiceRoleD6C6258E
-          - Arn
-      Runtime: nodejs16.x
-    DependsOn:
-      - ApiHandlerPublicServiceRoleDefaultPolicy2FBCFCB8
-      - ApiHandlerPublicServiceRoleD6C6258E
-  ApiHandlerPrivateServiceRole38513F35:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-        - Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  ApiHandlerPrivateServiceRoleDefaultPolicy0E6119BC:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
           - Action:
-              - dynamodb:Query
-              - dynamodb:UpdateItem
+              - cloudfront:GetInvalidation
+              - cloudfront:CreateInvalidation
             Effect: Allow
-            Resource:
-              Fn::GetAtt:
-                - LikesTable9511B0A4
-                - Arn
+            Resource: "*"
         Version: 2012-10-17
-      PolicyName: ApiHandlerPrivateServiceRoleDefaultPolicy0E6119BC
+      PolicyName: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF
       Roles:
-        - Ref: ApiHandlerPrivateServiceRole38513F35
-  ApiHandlerPrivateD80F1A0B:
+        - Ref: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265
+  CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536:
     Type: AWS::Lambda::Function
     Properties:
       Code:
@@ -511,462 +702,65 @@ Resources:
         S3Key: objectKey
       Environment:
         Variables:
-          DYNAMODB_TABLE_LIKES_NAME:
-            Ref: LikesTable9511B0A4
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          AWS_CA_BUNDLE: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
       Handler: index.handler
+      Layers:
+        - Ref: deploynextstaticbucketAwsCliLayer6A486995
       Role:
         Fn::GetAtt:
-          - ApiHandlerPrivateServiceRole38513F35
+          - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265
           - Arn
-      Runtime: nodejs16.x
+      Runtime: python3.9
+      Timeout: 900
     DependsOn:
-      - ApiHandlerPrivateServiceRoleDefaultPolicy0E6119BC
-      - ApiHandlerPrivateServiceRole38513F35
-  RestApi0C43BF4B:
-    Type: AWS::ApiGateway::RestApi
+      - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF
+      - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265
+  deploynextpublicbucketAwsCliLayer3576F0CD:
+    Type: AWS::Lambda::LayerVersion
     Properties:
-      Name: RestApi
-  RestApiCloudWatchRoleE3ED6605:
-    Type: AWS::IAM::Role
+      Content:
+        S3Bucket: bucketName
+        S3Key: objectKey
+      Description: /opt/awscli/aws
+  deploynextpublicbucketCustomResourceE5B28743:
+    Type: Custom::CDKBucketDeployment
     Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service: apigateway.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-        - Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-  RestApiAccount7C83CF5A:
-    Type: AWS::ApiGateway::Account
-    Properties:
-      CloudWatchRoleArn:
+      ServiceToken:
         Fn::GetAtt:
-          - RestApiCloudWatchRoleE3ED6605
+          - CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536
           - Arn
-    DependsOn:
-      - RestApi0C43BF4B
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-  RestApiDeployment180EC5035cbb25fb08ad4885a58454a0358eae28:
-    Type: AWS::ApiGateway::Deployment
-    Properties:
-      Description: Automatically created by the RestApi construct
-      RestApiId:
-        Ref: RestApi0C43BF4B
-    DependsOn:
-      - RestApiimagesGET951BF6C6
-      - RestApiimagesOPTIONS9BBEC385
-      - RestApiimagesPOST92A834FD
-      - RestApiimages029FA9EE
-      - RestApilikesimageKeyS3GETF6B929E9
-      - RestApilikesimageKeyS3OPTIONS8004544D
-      - RestApilikesimageKeyS35646FC25
-      - RestApilikesOPTIONS8763ED47
-      - RestApilikesPOST54D51126
-      - RestApilikes8A2A45BC
-  RestApiDeploymentStageprod3855DE66:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      DeploymentId:
-        Ref: RestApiDeployment180EC5035cbb25fb08ad4885a58454a0358eae28
-      RestApiId:
-        Ref: RestApi0C43BF4B
-      StageName: prod
-    DependsOn:
-      - RestApiAccount7C83CF5A
-  RestApiimages029FA9EE:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId:
-        Fn::GetAtt:
-          - RestApi0C43BF4B
-          - RootResourceId
-      PathPart: images
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApiimagesOPTIONS9BBEC385:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      ApiKeyRequired: false
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
-                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-            StatusCode: "204"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "204"
-      ResourceId:
-        Ref: RestApiimages029FA9EE
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApiimagesGETApiPermissionAppStackRestApi93F45D42GETimages0EA57D7D:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPublic61F4B222
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /
-            - Ref: RestApiDeploymentStageprod3855DE66
-            - /GET/images
-  RestApiimagesGETApiPermissionTestAppStackRestApi93F45D42GETimages80EEE134:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPublic61F4B222
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /test-invoke-stage/GET/images
-  RestApiimagesGET951BF6C6:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: GET
-      Integration:
-        IntegrationHttpMethod: POST
-        Type: AWS_PROXY
-        Uri:
-          Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - ":apigateway:"
-              - Ref: AWS::Region
-              - :lambda:path/2015-03-31/functions/
-              - Fn::GetAtt:
-                  - ApiHandlerPublic61F4B222
-                  - Arn
-              - /invocations
-      ResourceId:
-        Ref: RestApiimages029FA9EE
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApiimagesPOSTApiPermissionAppStackRestApi93F45D42POSTimages3B50B9EA:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPublic61F4B222
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /
-            - Ref: RestApiDeploymentStageprod3855DE66
-            - /POST/images
-  RestApiimagesPOSTApiPermissionTestAppStackRestApi93F45D42POSTimagesBBC17CBC:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPublic61F4B222
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /test-invoke-stage/POST/images
-  RestApiimagesPOST92A834FD:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: POST
-      Integration:
-        IntegrationHttpMethod: POST
-        Type: AWS_PROXY
-        Uri:
-          Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - ":apigateway:"
-              - Ref: AWS::Region
-              - :lambda:path/2015-03-31/functions/
-              - Fn::GetAtt:
-                  - ApiHandlerPublic61F4B222
-                  - Arn
-              - /invocations
-      ResourceId:
-        Ref: RestApiimages029FA9EE
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApilikes8A2A45BC:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId:
-        Fn::GetAtt:
-          - RestApi0C43BF4B
-          - RootResourceId
-      PathPart: likes
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApilikesOPTIONS8763ED47:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      ApiKeyRequired: false
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
-                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-            StatusCode: "204"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "204"
-      ResourceId:
-        Ref: RestApilikes8A2A45BC
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApilikesPOSTApiPermissionAppStackRestApi93F45D42POSTlikes35711DDD:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPrivateD80F1A0B
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /
-            - Ref: RestApiDeploymentStageprod3855DE66
-            - /POST/likes
-  RestApilikesPOSTApiPermissionTestAppStackRestApi93F45D42POSTlikes354F2AF8:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPrivateD80F1A0B
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /test-invoke-stage/POST/likes
-  RestApilikesPOST54D51126:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: POST
-      Integration:
-        IntegrationHttpMethod: POST
-        Type: AWS_PROXY
-        Uri:
-          Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - ":apigateway:"
-              - Ref: AWS::Region
-              - :lambda:path/2015-03-31/functions/
-              - Fn::GetAtt:
-                  - ApiHandlerPrivateD80F1A0B
-                  - Arn
-              - /invocations
-      ResourceId:
-        Ref: RestApilikes8A2A45BC
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApilikesimageKeyS35646FC25:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId:
-        Ref: RestApilikes8A2A45BC
-      PathPart: "{imageKeyS3}"
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApilikesimageKeyS3OPTIONS8004544D:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      ApiKeyRequired: false
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,\\
-                Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-            StatusCode: "204"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "204"
-      ResourceId:
-        Ref: RestApilikesimageKeyS35646FC25
-      RestApiId:
-        Ref: RestApi0C43BF4B
-  RestApilikesimageKeyS3GETApiPermissionAppStackRestApi93F45D42GETlikesimageKeyS376E8175F:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPrivateD80F1A0B
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /
-            - Ref: RestApiDeploymentStageprod3855DE66
-            - /GET/likes/*
-  RestApilikesimageKeyS3GETApiPermissionTestAppStackRestApi93F45D42GETlikesimageKeyS32DE4051E:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-          - ApiHandlerPrivateD80F1A0B
-          - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Join:
-          - ""
-          - - "arn:"
-            - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
-            - Ref: RestApi0C43BF4B
-            - /test-invoke-stage/GET/likes/*
-  RestApilikesimageKeyS3GETF6B929E9:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: GET
-      Integration:
-        IntegrationHttpMethod: POST
-        Type: AWS_PROXY
-        Uri:
-          Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - ":apigateway:"
-              - Ref: AWS::Region
-              - :lambda:path/2015-03-31/functions/
-              - Fn::GetAtt:
-                  - ApiHandlerPrivateD80F1A0B
-                  - Arn
-              - /invocations
-      ResourceId:
-        Ref: RestApilikesimageKeyS35646FC25
-      RestApiId:
-        Ref: RestApi0C43BF4B
+      SourceBucketNames:
+        - Fn::Sub: cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}
+      SourceObjectKeys:
+        - ea547841790f5fe5d15fb460ac30512a908af8c2933d6259faa8cbb5bc492189.zip
+      DestinationBucketName:
+        Ref: nextbucket0EBCEB02
+      DestinationBucketKeyPrefix: static
+      Prune: true
+      DistributionId:
+        Ref: Distribution830FAC52
+      DistributionPaths:
+        - /static/*
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
 Outputs:
-  CfnOutCloudFrontUrl:
-    Description: URL for CLOUDFRONT_URL in \`frontend/.env\` file
+  apiEndpoint9349E63C:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: apiC8550315
+          - .execute-api.
+          - Ref: AWS::Region
+          - .
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: apiDeploymentStageprod896C8101
+          - /
+  Nextbucket:
+    Value:
+      Ref: nextbucket0EBCEB02
+  CloudFrontURL:
     Value:
       Fn::Join:
         - ""
@@ -974,61 +768,6 @@ Outputs:
           - Fn::GetAtt:
               - Distribution830FAC52
               - DomainName
-  CfnOutDistributionId:
-    Description: CloudFront Distribution Id
-    Value:
-      Ref: Distribution830FAC52
-  CfnOutBucketName:
-    Description: Website Hosting Bucket Name
-    Value:
-      Ref: Bucket83908E77
-  cfnOutBucketArn:
-    Description: Website Hosting Bucket Name
-    Value:
-      Fn::GetAtt:
-        - Bucket83908E77
-        - Arn
-  RestApiEndpoint0551178A:
-    Value:
-      Fn::Join:
-        - ""
-        - - https://
-          - Ref: RestApi0C43BF4B
-          - .execute-api.
-          - Ref: AWS::Region
-          - .
-          - Ref: AWS::URLSuffix
-          - /
-          - Ref: RestApiDeploymentStageprod3855DE66
-          - /
-  CfnOutApiLikesUrl:
-    Description: Likes API URL for \`frontend/.env\` file
-    Value:
-      Fn::Join:
-        - ""
-        - - https://
-          - Ref: RestApi0C43BF4B
-          - .execute-api.
-          - Ref: AWS::Region
-          - .
-          - Ref: AWS::URLSuffix
-          - /
-          - Ref: RestApiDeploymentStageprod3855DE66
-          - /likes
-  CfnOutApiImagesUrl:
-    Description: Images API URL for \`frontend/.env\` file
-    Value:
-      Fn::Join:
-        - ""
-        - - https://
-          - Ref: RestApi0C43BF4B
-          - .execute-api.
-          - Ref: AWS::Region
-          - .
-          - Ref: AWS::URLSuffix
-          - /
-          - Ref: RestApiDeploymentStageprod3855DE66
-          - /images
 Parameters:
   BootstrapVersion:
     Type: AWS::SSM::Parameter::Value<String>

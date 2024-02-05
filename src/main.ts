@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { AppStack } from './infra/app/app-stack';
+import { NextjsAppStack } from './infra/app/app-stack';
 import { Pipeline } from './infra/cicd/app-pipeline-construct';
 import { DBPipeline } from './infra/cicd/database-pipeline-construct';
 import { PrismaStack } from './infra/cicd/prisma-stack';
@@ -76,8 +76,8 @@ if (targetStack == 'PrismaStack') {
   new PrismaStack(app, 'PrismaStack', { env });
 }
 
-if (targetStack == 'AppStack') {
-  new AppStack(app, 'AppStack', { branchName: 'main' }, { env });
+if (targetStack == 'NextjsAppStack') {
+  new NextjsAppStack(app, 'NextjsAppStack', { branchName: 'main' }, { env });
 }
 
 if (targetStack == 'CrossAccountResources') {
