@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import { Annotations, Match, Template } from 'aws-cdk-lib/assertions';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as yaml from 'yaml';
 import { PrismaStack } from '../src/infra/cicd/prisma-stack';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 
-let fromAssetMock
+let fromAssetMock;
 beforeAll((): void => {
   fromAssetMock = jest.spyOn(lambda.Code, 'fromAsset').mockReturnValue({
     isInline: false,
@@ -13,19 +13,19 @@ beforeAll((): void => {
       return {
         s3Location: {
           bucketName: 'bucketName',
-          objectKey: 'objectKey'
-        }
-      }
+          objectKey: 'objectKey',
+        },
+      };
     },
     bindToResource: () => {
-      return
-    }
-  } as any)
-})
+      return;
+    },
+  } as any);
+});
 
 afterAll(() => {
-  fromAssetMock!.mockRestore()
-})
+  fromAssetMock!.mockRestore();
+});
 
 // let fromImageAssetMock
 // beforeAll((): void => {
@@ -47,7 +47,6 @@ afterAll(() => {
 // })
 
 
-
 test('PrismaStack cdk-nag AwsSolutions Pack', () => {
 
   const app = new cdk.App();
@@ -67,7 +66,7 @@ test('PrismaStack cdk-nag AwsSolutions Pack', () => {
     { id: 'AwsSolutions-RDS3', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-RDS10', reason: 'TBD reason of 10 characters or more' },
     { id: 'AwsSolutions-RDS11', reason: 'TBD reason of 10 characters or more' },
-    { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' }
+    { id: 'AwsSolutions-IAM4', reason: 'TBD reason of 10 characters or more' },
   ]);
 
   const warnings = Annotations.fromStack(stack).findWarning(

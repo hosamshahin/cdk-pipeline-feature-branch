@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import { Annotations, Match, Template } from 'aws-cdk-lib/assertions';
-import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import * as yaml from 'yaml';
 import { AppStack } from '../src/infra/app/app-stack';
 
-let fromAssetMock
+let fromAssetMock;
 beforeAll((): void => {
   fromAssetMock = jest.spyOn(lambda.Code, 'fromAsset').mockReturnValue({
     isInline: false,
@@ -13,19 +13,19 @@ beforeAll((): void => {
       return {
         s3Location: {
           bucketName: 'bucketName',
-          objectKey: 'objectKey'
-        }
-      }
+          objectKey: 'objectKey',
+        },
+      };
     },
     bindToResource: () => {
-      return
-    }
-  } as any)
-})
+      return;
+    },
+  } as any);
+});
 
 afterAll(() => {
-  fromAssetMock!.mockRestore()
-})
+  fromAssetMock!.mockRestore();
+});
 
 // let fromImageAssetMock
 // beforeAll((): void => {
@@ -54,7 +54,7 @@ test('AppStack cdk-nag AwsSolutions Pack', () => {
     region: process.env.CDK_DEFAULT_REGION,
   };
 
-  const stack = new AppStack(app, 'AppStack', {branchName: 'main'}, { env });
+  const stack = new AppStack(app, 'AppStack', { branchName: 'main' }, { env });
 
   cdk.Aspects.of(stack).add(new AwsSolutionsChecks());
 

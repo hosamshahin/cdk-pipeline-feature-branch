@@ -38,7 +38,7 @@ export class Pipeline extends Construct {
       crossAccountKeys: true,
       selfMutation: true,
       pipelineName: `Pipeline-${props.deploymentEnv}`,
-      synth: new cpl.ShellStep('Synth', {
+      synth: new cpl.CodeBuildStep('Synth', {
         input,
         env: {
           BRANCH_NAME: input.sourceAttribute('BranchName'),
