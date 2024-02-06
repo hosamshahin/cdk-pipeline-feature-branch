@@ -253,15 +253,10 @@ async function fetchConfigFromSecretsManager(event) {
       let request = event.Records[0].cf;
       let distId = request.config.distributionId;
       let distInfo = await deps.cf.getDistribution({ Id: distId }).promise();
-      //log.info('distInfo: ' + distInfo);
       let lambdaArn = distInfo.Distribution.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations.Items[0].LambdaFunctionARN;
-      //log.info('lambdaArn: ' + lambdaArn);
-      lambdaArn = lambdaArn.substring(0, lambdaArn.lastIndexOf(":")); //remove lambda version from ARN
-      //log.info('lambdaArn again: ' + lambdaArn);
+      lambdaArn = lambdaArn.substring(0, lambdaArn.lastIndexOf(":"));
       let lambdaTags = await deps.lambda.listTags({ Resource: lambdaArn }).promise();
-      //log.info('lambdaTags: ' + JSON.stringify(lambdaTags));
       secretId = lambdaTags.Tags.secretId;
-      //log.info('secretId: ' + secretId);
     } catch (err) {
       log.error(err);
     }

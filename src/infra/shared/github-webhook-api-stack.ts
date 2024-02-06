@@ -18,11 +18,12 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       value: githubSecretUUIDValue,
     });
 
-    const config: any = this.node.tryGetContext('config') || {};
+
+    const config = this.node.tryGetContext('config') || {};
     const accounts = config.accounts || {};
-    const resourceAttr = config.resourceAttr || {};
-    const adminRoleFromCicdAccount = resourceAttr.adminRoleFromCicdAccount;
-    const webhookAPILambdaRole = resourceAttr.webhookAPILambdaRole;
+    const resourceAttr = config['resourceAttr'] || {};
+    const adminRoleFromCicdAccount = resourceAttr['adminRoleFromCicdAccount'] || '';
+    const webhookAPILambdaRole = resourceAttr['webhookAPILambdaRole'] || '';
 
     const handlerRole = new iam.Role(this, 'generator-lambda-role', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
@@ -55,7 +56,7 @@ export class GithubWebhookAPIStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole'],
         resources: [
-          `arn:aws:iam::${accounts.DEV_ACCOUNT_ID}:role/${adminRoleFromCicdAccount}`,
+          `arn:aws:iam::${accounts['DEV_ACCOUNT_ID']}:role/${adminRoleFromCicdAccount}`,
         ],
       }),
     );
@@ -70,8 +71,9 @@ export class GithubWebhookAPIStack extends cdk.Stack {
         pipelineTemplate: 'Pipeline-cicd',
         branchPrefix: '^(feature|bug|hotfix)-',
         featurePipelineSuffix: '-FeatureBranchPipeline',
-        devAccount: accounts.DEV_ACCOUNT_ID,
+        devAccount: accounts['DEV_ACCOUNT_ID'],
         githubSecretUUIDValue,
+        adminRoleFromCicdAccount
       },
       memorySize: 1024,
       timeout: cdk.Duration.minutes(1),

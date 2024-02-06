@@ -41,7 +41,7 @@ export class Pipeline extends Construct {
         },
         commands: [
           'npm install projen',
-          'cd $CODEBUILD_SRC_DIR/src/client_nextjs',
+          'cd $CODEBUILD_SRC_DIR/src/client',
           'npm install',
           'npm run build',
           'cd $CODEBUILD_SRC_DIR/src/infra/lambda/app/auth && echo "$BRANCH_NAME-$AUTH_SECRET_NAME" > secret_name.txt && npm install --omit=dev',

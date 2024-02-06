@@ -137,6 +137,7 @@ Resources:
             - - "arn:"
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      RoleName: ""
   generatorlambdaroleDefaultPolicy919786F3:
     Type: AWS::IAM::Policy
     Properties:
@@ -158,7 +159,7 @@ Resources:
             Resource: "*"
           - Action: sts:AssumeRole
             Effect: Allow
-            Resource: arn:aws:iam::undefined:role/undefined
+            Resource: arn:aws:iam::undefined:role/
         Version: 2012-10-17
       PolicyName: generatorlambdaroleDefaultPolicy919786F3
       Roles:
@@ -178,6 +179,7 @@ Resources:
             Fn::GetAtt:
               - GithubSecretUUID86714E5C
               - uuid
+          adminRoleFromCicdAccount: ""
       Handler: github_webhook.handler
       MemorySize: 1024
       Role:

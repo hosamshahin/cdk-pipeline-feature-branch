@@ -54,7 +54,7 @@ export class NextjsAppStack extends cdk.Stack {
       handler: 'run.sh',
       code: lambda.Code.fromAsset(path.join(
         __dirname,
-        '../../client_nextjs/.next/',
+        '../../client/.next/',
         'standalone')
       ),
       architecture: lambda.Architecture.X86_64,
@@ -74,11 +74,9 @@ export class NextjsAppStack extends cdk.Stack {
     });
 
     const nextCdkFunctionIntegration = new apiGateway.LambdaIntegration(
-      nextCdkFunction,
-      {
-        allowTestInvoke: false
-      }
-    );
+      nextCdkFunction, {
+      allowTestInvoke: false
+    });
     api.root.addMethod('ANY', nextCdkFunctionIntegration);
 
     api.root.addProxy({
@@ -254,7 +252,7 @@ export class NextjsAppStack extends cdk.Stack {
     });
 
     new s3deploy.BucketDeployment(this, 'deploy-next-static-bucket', {
-      sources: [s3deploy.Source.asset('./src/client_nextjs/.next/static/')],
+      sources: [s3deploy.Source.asset('./src/client/.next/static/')],
       destinationBucket: nextBucket,
       destinationKeyPrefix: '_next/static',
       distribution: cloudfrontDistribution,
@@ -262,7 +260,7 @@ export class NextjsAppStack extends cdk.Stack {
     });
 
     new s3deploy.BucketDeployment(this, 'deploy-next-public-bucket', {
-      sources: [s3deploy.Source.asset('./src/client_nextjs/public/static/')],
+      sources: [s3deploy.Source.asset('./src/client/public/static/')],
       destinationBucket: nextBucket,
       destinationKeyPrefix: 'static',
       distribution: cloudfrontDistribution,

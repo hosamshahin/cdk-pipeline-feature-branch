@@ -29,10 +29,6 @@ Resources:
             Effect: Allow
             Principal:
               AWS: arn:aws:iam::undefined:role/
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::undefined:role/undefined-main
         Version: 2012-10-17
       Description: Role to grant access to target accounts
       ManagedPolicyArns:
@@ -41,11 +37,6 @@ Resources:
             - - "arn:"
               - Ref: AWS::Partition
               - :iam::aws:policy/AWSCloudFormationFullAccess
-        - Fn::Join:
-            - ""
-            - - "arn:"
-              - Ref: AWS::Partition
-              - :iam::aws:policy/CloudFrontFullAccess
 Outputs:
   CloudfrontAuthSecretArn:
     Value:
