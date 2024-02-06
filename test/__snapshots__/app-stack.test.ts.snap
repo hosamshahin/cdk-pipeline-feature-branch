@@ -476,6 +476,9 @@ Resources:
           - CloudfrontAuthRole247E2116
           - Arn
       Runtime: nodejs16.x
+      Tags:
+        - Key: secretId
+          Value: main-
       Timeout: 5
     DependsOn:
       - CloudfrontAuthRole247E2116

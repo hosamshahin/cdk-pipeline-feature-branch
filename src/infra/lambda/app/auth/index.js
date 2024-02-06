@@ -31,349 +31,370 @@ let log;
  * overwritten with the specified dependencies.
  */
 exports.handler = async (event, ctx, cb, setDeps = setDependencies) => {
-	log = new Log(event, ctx);
-	secretId = event.Records[0].cf.request.headers.secretId;
-	log.info('init lambda', { event: event });
-	deps = setDeps(deps);
-	try {
-		await prepareConfigGlobals();
-		return await authenticate(event);
-	} catch (err) {
-		log.error(err.message, { event: event }, err);
-		return getInternalServerErrorPayload(cb);
-	}
+  log = new Log(event, ctx);
+  // secretId = event.Records[0].cf.request.headers.secretId;
+  log.info('init lambda', { event: event });
+  deps = setDeps(deps);
+  try {
+    await prepareConfigGlobals(event);
+    return await authenticate(event);
+  } catch (err) {
+    log.error(err.message, { event: event }, err);
+    return getInternalServerErrorPayload(cb);
+  }
 };
 
 // setDepedencies is used to allow the overwriting of module-level dependencies for the purpose of
 // testing.  It's basically dependency injection.
 function setDependencies(dependencies) {
-	if (dependencies === undefined || dependencies === null) {
-		log.info('setting up dependencies');
-		return {
-			axios: Axios,
-			sm: new AWS.SecretsManager({ apiVersion: '2017-10-17', region: 'us-east-1' })
-		};
-	}
-	return dependencies;
+  if (dependencies === undefined || dependencies === null) {
+    // log.info('setting up dependencies');
+    return {
+      axios: Axios,
+      sm: new AWS.SecretsManager({ apiVersion: '2017-10-17', region: 'us-east-1' }),
+      cf: new AWS.CloudFront({ apiVersion: '2020-05-31', region: 'us-east-1' }),
+      lambda: new AWS.Lambda({ apiVersion: '2015-03-31', region: 'us-east-1' })
+    };
+  }
+  return dependencies;
 }
 
 // authenticate authenticates the user if they are a valid user, otherwise redirects accordingly.
 async function authenticate(evt) {
-	const { request } = evt.Records[0].cf;
-	const { headers, querystring } = request;
-	const queryString = QueryString.parse(querystring);
-	log.info(config.CALLBACK_PATH);
-	log.info(request.uri);
-	if (request.uri.startsWith(config.CALLBACK_PATH)) {
+  const { request } = evt.Records[0].cf;
+  const { headers, querystring } = request;
+  const queryString = QueryString.parse(querystring);
+  log.info(config.CALLBACK_PATH);
+  log.info(request.uri);
+  if (request.uri.startsWith(config.CALLBACK_PATH)) {
 
-		log.info('callback from OIDC provider received');
-		if (queryString.error) {
-			return handleInvalidQueryString(queryString);
-		}
-		log.info(queryString.code);
-		if (queryString.code === undefined || queryString.code === null) {
-			return getUnauthorizedPayload('No Code Found', '', '');
-		}
-		return getNewJwtResponse({ evt, request, queryString, headers });
-	}
-	if ('cookie' in headers && 'TOKEN' in Cookie.parse(headers.cookie[0].value)) {
-		return getVerifyJwtResponse(request, headers);
-	}
-	log.info('redirecting to OIDC provider');
-	return getOidcRedirectPayload(request, headers);
+    log.info('callback from OIDC provider received');
+    if (queryString.error) {
+      return handleInvalidQueryString(queryString);
+    }
+    log.info(queryString.code);
+    if (queryString.code === undefined || queryString.code === null) {
+      return getUnauthorizedPayload('No Code Found', '', '');
+    }
+    return getNewJwtResponse({ evt, request, queryString, headers });
+  }
+  if ('cookie' in headers && 'TOKEN' in Cookie.parse(headers.cookie[0].value)) {
+    return getVerifyJwtResponse(request, headers);
+  }
+  log.info('redirecting to OIDC provider');
+  return getOidcRedirectPayload(request, headers);
 }
 
 // getVerifyJwtResponse gets the appropriate response for verified Jwt.
 async function getVerifyJwtResponse(request, headers) {
 
-	log.info('request received with TOKEN cookie', { request, headers });
-	try {
+  log.info('request received with TOKEN cookie', { request, headers });
+  try {
 
-		log.info('verifying JWT Response');
-		await verifyJwt(Cookie.parse(headers.cookie[0].value).TOKEN, config.PUBLIC_KEY.trim(), {
-			algorithms: ['RS256']
-		});
-		log.info('verified JWT Response');
-		return request;
-	} catch (err) {
-		switch (err.name) {
-			case 'TokenExpiredError':
-				log.warn('token expired, redirecting to OIDC provider', undefined, err);
-				return getOidcRedirectPayload(request, headers);
-			case 'JsonWebTokenError':
-				log.warn('jwt error, unauthorized', undefined, err);
-				return getUnauthorizedPayload('Json Web Token Error', err.message, '');
-			default:
-				log.warn('unknown JWT error, unauthorized', undefined, err);
-				return getUnauthorizedPayload('Unauthorized.', `User is not permitted`, '');
-		}
-	}
+    log.info('verifying JWT Response');
+    await verifyJwt(Cookie.parse(headers.cookie[0].value).TOKEN, config.PUBLIC_KEY.trim(), {
+      algorithms: ['RS256']
+    });
+    log.info('verified JWT Response');
+    return request;
+  } catch (err) {
+    switch (err.name) {
+      case 'TokenExpiredError':
+        log.warn('token expired, redirecting to OIDC provider', undefined, err);
+        return getOidcRedirectPayload(request, headers);
+      case 'JsonWebTokenError':
+        log.warn('jwt error, unauthorized', undefined, err);
+        return getUnauthorizedPayload('Json Web Token Error', err.message, '');
+      default:
+        log.warn('unknown JWT error, unauthorized', undefined, err);
+        return getUnauthorizedPayload('Unauthorized.', `User is not permitted`, '');
+    }
+  }
 }
 
 // getNewJwtResponse returns the response required to redirect and get a new Jwt.
 async function getNewJwtResponse({ evt, request, queryString, headers }) {
-	try {
-		config.TOKEN_REQUEST.code = queryString.code;
-		log.info('details', { config, queryString });
-		const { idToken, decodedToken } = await getIdAndDecodedToken();
-		log.info('searching for JWK from discovery document', { jwks, decodedToken, idToken });
-		const rawPem = jwks.keys.filter((k) => k.kid === decodedToken.header.kid)[0];
-		if (rawPem === undefined) {
-			throw new Error('unable to find expected pem in jwks keys');
-		}
-		const pem = JwkToPem(rawPem);
-		log.info('verifying JWT', { rawPem, pem });
-		try {
-			const decoded = await verifyJwt(idToken, pem, { algorithms: ['RS256'] });
-			log.info('decoded Jwt', { decoded });
-			if (
-				'cookie' in headers &&
-				'NONCE' in Cookie.parse(headers.cookie[0].value) &&
-				validateNonce(decoded.nonce, Cookie.parse(headers.cookie[0].value).NONCE)
-			) {
-				return getRedirectPayload({ evt, queryString, decodedToken, headers });
-			}
-			return getUnauthorizedPayload('Nonce Verification Failed', '', '');
-		} catch (err) {
-			if (err === undefined || err === null || err.name === undefined || err.name === null) {
-				log.warn('unknown named JWT error, unauthorized.', undefined, err);
-				return getUnauthorizedPayload(
-					'Unknown JWT',
-					`User ${decodedToken.payload.email || 'user'} is not permitted`,
-					''
-				);
-			}
-			switch (err.name) {
-				case 'TokenExpiredError':
-					log.warn('token expired, redirecting to OIDC provider', undefined, err);
-					return getOidcRedirectPayload(request, headers);
-				case 'JsonWebTokenError':
-					log.warn('jwt error, unauthorized', undefined, err);
-					return getUnauthorizedPayload('Json Web Token Error', err.message, '');
-				default:
-					log.warn('unknown JWT error, unauthorized', undefined, err);
-					return getUnauthorizedPayload(
-						'Unknown JWT',
-						`User ${decodedToken.payload.email || 'user'} is not permitted`,
-						''
-					);
-			}
-		}
-	} catch (error) {
-		log.error('internal server error', undefined, error);
-		return getInternalServerErrorPayload();
-	}
+  try {
+    config.TOKEN_REQUEST.code = queryString.code;
+    log.info('details', { config, queryString });
+    const { idToken, decodedToken } = await getIdAndDecodedToken();
+    log.info('searching for JWK from discovery document', { jwks, decodedToken, idToken });
+    const rawPem = jwks.keys.filter((k) => k.kid === decodedToken.header.kid)[0];
+    if (rawPem === undefined) {
+      throw new Error('unable to find expected pem in jwks keys');
+    }
+    const pem = JwkToPem(rawPem);
+    log.info('verifying JWT', { rawPem, pem });
+    try {
+      const decoded = await verifyJwt(idToken, pem, { algorithms: ['RS256'] });
+      log.info('decoded Jwt', { decoded });
+      if (
+        'cookie' in headers &&
+        'NONCE' in Cookie.parse(headers.cookie[0].value) &&
+        validateNonce(decoded.nonce, Cookie.parse(headers.cookie[0].value).NONCE)
+      ) {
+        return getRedirectPayload({ evt, queryString, decodedToken, headers });
+      }
+      return getUnauthorizedPayload('Nonce Verification Failed', '', '');
+    } catch (err) {
+      if (err === undefined || err === null || err.name === undefined || err.name === null) {
+        log.warn('unknown named JWT error, unauthorized.', undefined, err);
+        return getUnauthorizedPayload(
+          'Unknown JWT',
+          `User ${decodedToken.payload.email || 'user'} is not permitted`,
+          ''
+        );
+      }
+      switch (err.name) {
+        case 'TokenExpiredError':
+          log.warn('token expired, redirecting to OIDC provider', undefined, err);
+          return getOidcRedirectPayload(request, headers);
+        case 'JsonWebTokenError':
+          log.warn('jwt error, unauthorized', undefined, err);
+          return getUnauthorizedPayload('Json Web Token Error', err.message, '');
+        default:
+          log.warn('unknown JWT error, unauthorized', undefined, err);
+          return getUnauthorizedPayload(
+            'Unknown JWT',
+            `User ${decodedToken.payload.email || 'user'} is not permitted`,
+            ''
+          );
+      }
+    }
+  } catch (error) {
+    log.error('internal server error', undefined, error);
+    return getInternalServerErrorPayload();
+  }
 }
 
 // getIdAndDecodedToken gets the id token and decoded version fo the token from the token
 // endpoint.
 async function getIdAndDecodedToken() {
-	const tokenRequest = QueryString.stringify(config.TOKEN_REQUEST);
-	log.info('requesting access token.', { discoveryDocument, tokenRequest, config });
-	const response = await deps.axios.post(discoveryDocument.token_endpoint, tokenRequest);
-	log.info('response', { response });
-	const decodedToken = JsonWebToken.decode(response.data.id_token, {
-		complete: true
-	});
-	log.info('decodedToken', { decodedToken });
-	return { idToken: response.data.id_token, decodedToken };
+  const tokenRequest = QueryString.stringify(config.TOKEN_REQUEST);
+  log.info('requesting access token.', { discoveryDocument, tokenRequest, config });
+  const response = await deps.axios.post(discoveryDocument.token_endpoint, tokenRequest);
+  log.info('response', { response });
+  const decodedToken = JsonWebToken.decode(response.data.id_token, {
+    complete: true
+  });
+  log.info('decodedToken', { decodedToken });
+  return { idToken: response.data.id_token, decodedToken };
 }
 
 // verifyJwt wraps the callback-based JsonWebToken.verify function in a promise.
 async function verifyJwt(token, pem, algorithms) {
-	return new Promise((resolve, reject) => {
-		JsonWebToken.verify(token, pem, algorithms, (err, decoded) => {
-			if (err) {
-				log.error('verifyJwt failed', { token, pem, algorithms }, err);
-				return reject(err);
-			}
-			return resolve(decoded);
-		});
-	});
+  return new Promise((resolve, reject) => {
+    JsonWebToken.verify(token, pem, algorithms, (err, decoded) => {
+      if (err) {
+        log.error('verifyJwt failed', { token, pem, algorithms }, err);
+        return reject(err);
+      }
+      return resolve(decoded);
+    });
+  });
 }
 
 // handleInvalidQueryString creates an unauthorized response with the proper formatting when
 // a querysting contains an error.
 function handleInvalidQueryString(queryString) {
-	const errors = {
-		invalid_request: 'Invalid Request',
-		unauthorized_client: 'Unauthorized Client',
-		access_denied: 'Access Denied',
-		unsupported_response_type: 'Unsupported Response Type',
-		invalid_scope: 'Invalid Scope',
-		server_error: 'Server Error',
-		temporarily_unavailable: 'Temporarily Unavailable'
-	};
+  const errors = {
+    invalid_request: 'Invalid Request',
+    unauthorized_client: 'Unauthorized Client',
+    access_denied: 'Access Denied',
+    unsupported_response_type: 'Unsupported Response Type',
+    invalid_scope: 'Invalid Scope',
+    server_error: 'Server Error',
+    temporarily_unavailable: 'Temporarily Unavailable'
+  };
 
-	let error = '';
-	let errorDescription = '';
-	let errorUri = '';
+  let error = '';
+  let errorDescription = '';
+  let errorUri = '';
 
-	if (errors[queryString.error] != null) {
-		error = errors[queryString.error];
-	} else {
-		error = queryString.error;
-	}
-	if (queryString.error_description != null) {
-		errorDescription = queryString.error_description;
-	} else {
-		errorDescription = '';
-	}
+  if (errors[queryString.error] != null) {
+    error = errors[queryString.error];
+  } else {
+    error = queryString.error;
+  }
+  if (queryString.error_description != null) {
+    errorDescription = queryString.error_description;
+  } else {
+    errorDescription = '';
+  }
 
-	if (queryString.error_uri != null) {
-		errorUri = queryString.error_uri;
-	} else {
-		errorUri = '';
-	}
+  if (queryString.error_uri != null) {
+    errorUri = queryString.error_uri;
+  } else {
+    errorUri = '';
+  }
 
-	return getUnauthorizedPayload(error, errorDescription, errorUri);
+  return getUnauthorizedPayload(error, errorDescription, errorUri);
 }
 
 // getNonceAndHash gets a nonce and hash.
 function getNonceAndHash() {
-	const nonce = Crypto.randomBytes(32).toString('hex');
-	const hash = Crypto.createHmac('sha256', nonce).digest('hex');
-	return { nonce, hash };
+  const nonce = Crypto.randomBytes(32).toString('hex');
+  const hash = Crypto.createHmac('sha256', nonce).digest('hex');
+  return { nonce, hash };
 }
 
 // validateNonce validates a nonce.
 function validateNonce(nonce, hash) {
-	const other = Crypto.createHmac('sha256', nonce).digest('hex');
-	return other === hash;
+  const other = Crypto.createHmac('sha256', nonce).digest('hex');
+  return other === hash;
 }
 
 // fetchConfigFromSecretsManager pulls the specified configuration from SecretsManager
-async function fetchConfigFromSecretsManager() {
-	// Get Secrets Manager Config Key from File since we cannot use environment variables.
-	const secret = await deps.sm.getSecretValue({ SecretId: secretId }).promise(); // eslint-disable-next-line no-buffer-constructor
-	const buff = Buffer.from(JSON.parse(secret.SecretString).config, 'base64');
-	const decodedval = JSON.parse(buff.toString('utf-8'));
-	return decodedval;
+async function fetchConfigFromSecretsManager(event) {
+  // Get Secrets Manager Config Key from File since we cannot use environment variables.
+  //log.info('in fetchConfigFromSecretsManager secretId is: ' + secretId);
+  if (secretId == undefined) {
+    try {
+      let request = event.Records[0].cf;
+      let distId = request.config.distributionId;
+      let distInfo = await deps.cf.getDistribution({ Id: distId }).promise();
+      //log.info('distInfo: ' + distInfo);
+      let lambdaArn = distInfo.Distribution.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations.Items[0].LambdaFunctionARN;
+      //log.info('lambdaArn: ' + lambdaArn);
+      lambdaArn = lambdaArn.substring(0, lambdaArn.lastIndexOf(":")); //remove lambda version from ARN
+      //log.info('lambdaArn again: ' + lambdaArn);
+      let lambdaTags = await deps.lambda.listTags({ Resource: lambdaArn }).promise();
+      //log.info('lambdaTags: ' + JSON.stringify(lambdaTags));
+      secretId = lambdaTags.Tags.secretId;
+      //log.info('secretId: ' + secretId);
+    } catch (err) {
+      log.error(err);
+    }
+  } // Attempted to read from CloudFront Custom Header due to Environment variable limitations // Must be an Origin Request, but we need this to be a Viewer Request.
+  const secret = await deps.sm.getSecretValue({ SecretId: secretId }).promise(); // eslint-disable-next-line no-buffer-constructor
+  const buff = new Buffer(JSON.parse(secret.SecretString).config, 'base64');
+  const decodedval = JSON.parse(buff.toString('utf-8'));
+  return decodedval;
 }
 
 // setConfig sets the config object to the value from SecretsManager if it wasn't already set.
-async function setConfig() {
-	if (config === undefined) {
-		config = await fetchConfigFromSecretsManager();
-	}
+async function setConfig(event) {
+  if (config === undefined) {
+    config = await fetchConfigFromSecretsManager(event);
+  }
 }
 
 // setDiscoveryDocument sets the discoveryDocument object if it wasn't already set.
 async function setDiscoveryDocument() {
-	if (discoveryDocument === undefined) {
-		discoveryDocument = (await deps.axios.get(config.DISCOVERY_DOCUMENT)).data;
-	}
+  if (discoveryDocument === undefined) {
+    discoveryDocument = (await deps.axios.get(config.DISCOVERY_DOCUMENT)).data;
+  }
 }
 
 // setJwks sets the jwks object if it wasn't already set.
 async function setJwks() {
-	if (jwks === undefined) {
-		if (
-			discoveryDocument &&
-			(discoveryDocument.jwks_uri === undefined || discoveryDocument.jwks_uri === null)
-		) {
-			throw new Error('Unable to find JWK in discovery document');
-		}
-		jwks = (await deps.axios.get(discoveryDocument.jwks_uri)).data;
-	}
+  if (jwks === undefined) {
+    if (
+      discoveryDocument &&
+      (discoveryDocument.jwks_uri === undefined || discoveryDocument.jwks_uri === null)
+    ) {
+      throw new Error('Unable to find JWK in discovery document');
+    }
+    jwks = (await deps.axios.get(discoveryDocument.jwks_uri)).data;
+  }
 }
 
 // prepareConfigGlobals sets up all the lambda globals if they are not already set.
-async function prepareConfigGlobals() {
-	await setConfig();
-	await setDiscoveryDocument();
-	await setJwks();
+async function prepareConfigGlobals(event) {
+  await setConfig(event);
+  await setDiscoveryDocument();
+  await setJwks();
 }
 
 // getRedirectPayload gets the actual 302 redirect payload
 function getRedirectPayload({ evt, queryString, decodedToken, headers }) {
-	const response = {
-		status: '302',
-		statusDescription: 'Found',
-		body: 'ID token retrieved.',
-		headers: {
-			location: [
-				{
-					key: 'Location',
-					value:
-						evt.Records[0].cf.config.test !== undefined
-							? config.AUTH_REQUEST.redirect_uri + queryString.state
-							: queryString.state
-				}
-			],
-			'set-cookie': [
-				{
-					key: 'Set-Cookie',
-					value: Cookie.serialize(
-						'TOKEN',
-						JsonWebToken.sign({}, config.PRIVATE_KEY.trim(), {
-							audience: headers.host[0].value,
-							subject: decodedToken.payload.email,
-							expiresIn: config.SESSION_DURATION,
-							algorithm: 'RS256'
-						}),
-						{
-							path: '/',
-							maxAge: config.SESSION_DURATION
-						}
-					)
-				},
-				{
-					key: 'Set-Cookie',
-					value: Cookie.serialize('NONCE', '', {
-						path: '/',
-						expires: new Date(1970, 1, 1, 0, 0, 0, 0)
-					})
-				}
-			]
-		}
-	};
-	log.info('setting cookie and redirecting', { response });
-	return response;
+  const response = {
+    status: '302',
+    statusDescription: 'Found',
+    body: 'ID token retrieved.',
+    headers: {
+      location: [
+        {
+          key: 'Location',
+          value:
+            evt.Records[0].cf.config.test !== undefined
+              ? config.AUTH_REQUEST.redirect_uri + queryString.state
+              : queryString.state
+        }
+      ],
+      'set-cookie': [
+        {
+          key: 'Set-Cookie',
+          value: Cookie.serialize(
+            'TOKEN',
+            JsonWebToken.sign({}, config.PRIVATE_KEY.trim(), {
+              audience: headers.host[0].value,
+              subject: decodedToken.payload.email,
+              expiresIn: config.SESSION_DURATION,
+              algorithm: 'RS256'
+            }),
+            {
+              path: '/',
+              maxAge: config.SESSION_DURATION
+            }
+          )
+        },
+        {
+          key: 'Set-Cookie',
+          value: Cookie.serialize('NONCE', '', {
+            path: '/',
+            expires: new Date(1970, 1, 1, 0, 0, 0, 0)
+          })
+        }
+      ]
+    }
+  };
+  log.info('setting cookie and redirecting', { response });
+  return response;
 }
 
 // redirect generates an appropriate redirect response.
 function getOidcRedirectPayload(request) {
-	const { nonce, hash } = getNonceAndHash();
-	config.AUTH_REQUEST.nonce = nonce;
-	config.AUTH_REQUEST.state = request.uri; // Redirect to Authorization Server
+  const { nonce, hash } = getNonceAndHash();
+  config.AUTH_REQUEST.nonce = nonce;
+  config.AUTH_REQUEST.state = request.uri; // Redirect to Authorization Server
 
-	return {
-		status: '302',
-		statusDescription: 'Found',
-		body: 'Redirecting to OIDC provider',
-		headers: {
-			location: [
-				{
-					key: 'Location',
-					value: `${discoveryDocument.authorization_endpoint}?${QueryString.stringify(
-						config.AUTH_REQUEST
-					)}`
-				}
-			],
-			'set-cookie': [
-				{
-					key: 'Set-Cookie',
-					value: Cookie.serialize('TOKEN', '', {
-						path: '/',
-						expires: new Date(1970, 1, 1, 0, 0, 0, 0)
-					})
-				},
-				{
-					key: 'Set-Cookie',
-					value: Cookie.serialize('NONCE', hash, {
-						path: '/',
-						httpOnly: true
-					})
-				}
-			]
-		}
-	};
+  return {
+    status: '302',
+    statusDescription: 'Found',
+    body: 'Redirecting to OIDC provider',
+    headers: {
+      location: [
+        {
+          key: 'Location',
+          value: `${discoveryDocument.authorization_endpoint}?${QueryString.stringify(
+            config.AUTH_REQUEST
+          )}`
+        }
+      ],
+      'set-cookie': [
+        {
+          key: 'Set-Cookie',
+          value: Cookie.serialize('TOKEN', '', {
+            path: '/',
+            expires: new Date(1970, 1, 1, 0, 0, 0, 0)
+          })
+        },
+        {
+          key: 'Set-Cookie',
+          value: Cookie.serialize('NONCE', hash, {
+            path: '/',
+            httpOnly: true
+          })
+        }
+      ]
+    }
+  };
 }
 
 // getUnauthorizedPayload generates an appropriate unauthorized response.
 function getUnauthorizedPayload(error, errorDescription, errorUri) {
-	const body = `<!DOCTYPE html>
+  const body = `<!DOCTYPE html>
   <html lang="en">
   <head>
       <!-- Simple HttpErrorPages | MIT License | https://github.com/AndiDittrich/HttpErrorPages -->
@@ -388,34 +409,34 @@ function getUnauthorizedPayload(error, errorDescription, errorUri) {
   </html>
   `;
 
-	return {
-		body,
-		status: '401',
-		statusDescription: 'Unauthorized',
-		headers: {
-			'set-cookie': [
-				{
-					key: 'Set-Cookie',
-					value: Cookie.serialize('TOKEN', '', {
-						path: '/',
-						expires: new Date(1970, 1, 1, 0, 0, 0, 0)
-					})
-				},
-				{
-					key: 'Set-Cookie',
-					value: Cookie.serialize('NONCE', '', {
-						path: '/',
-						expires: new Date(1970, 1, 1, 0, 0, 0, 0)
-					})
-				}
-			]
-		}
-	};
+  return {
+    body,
+    status: '401',
+    statusDescription: 'Unauthorized',
+    headers: {
+      'set-cookie': [
+        {
+          key: 'Set-Cookie',
+          value: Cookie.serialize('TOKEN', '', {
+            path: '/',
+            expires: new Date(1970, 1, 1, 0, 0, 0, 0)
+          })
+        },
+        {
+          key: 'Set-Cookie',
+          value: Cookie.serialize('NONCE', '', {
+            path: '/',
+            expires: new Date(1970, 1, 1, 0, 0, 0, 0)
+          })
+        }
+      ]
+    }
+  };
 }
 
 // getInternalServerErrorPayload returns an appropriate InternalServerError response.
 function getInternalServerErrorPayload() {
-	const body = `<!DOCTYPE html>
+  const body = `<!DOCTYPE html>
   <html lang="en">
   <head>
       <!-- Simple HttpErrorPages | MIT License | https://github.com/AndiDittrich/HttpErrorPages -->
@@ -429,5 +450,5 @@ function getInternalServerErrorPayload() {
   </html>
   `;
 
-	return { status: '500', statusDescription: 'Internal Server Error', body };
+  return { status: '500', statusDescription: 'Internal Server Error', body };
 }

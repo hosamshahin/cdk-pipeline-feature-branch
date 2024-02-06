@@ -214,6 +214,8 @@ export class NextjsAppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(5)
     });
 
+    cdk.Tags.of(cloudfrontAuthFunction).add('secretId', `${props.branchName}-${authSecretName}`);
+
     const version = cloudfrontAuthFunction.currentVersion;
     const alias = new lambda.Alias(this, 'LambdaAlias', { aliasName: 'Current', version });
 
