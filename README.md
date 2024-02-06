@@ -133,7 +133,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
     "AUTHZ": "GOOGLE"
 }
 ```
-- Encode the config above to Base64 format with an online tool. Go to the `CrossAccountResources` stack in DEV/PRD, get the auth secret ARN from the output `CloudfrontAuthSecretArn` then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
+- Encode the config above to Base64 format with an online tool. Go to AWS Secrets Manager then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
 ```json
 { "config": "base64EcodedConfig" }
 
