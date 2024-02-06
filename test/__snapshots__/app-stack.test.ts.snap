@@ -554,6 +554,9 @@ Resources:
                           - Ref: apiDeploymentStageprod896C8101
                           - /
             Id: AppStackDistributionOrigin1FA502580
+            OriginCustomHeaders:
+              - HeaderName: secretId
+                HeaderValue: main-
             OriginPath:
               Fn::Join:
                 - ""

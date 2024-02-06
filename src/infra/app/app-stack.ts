@@ -219,7 +219,11 @@ export class NextjsAppStack extends cdk.Stack {
 
     const cloudfrontDistribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new origins.RestApiOrigin(api),
+        origin: new origins.RestApiOrigin(api, {
+          customHeaders: {
+            secretId: `${props.branchName}-${authSecretName}`
+          }
+        }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         edgeLambdas: [{

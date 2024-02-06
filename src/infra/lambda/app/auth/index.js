@@ -32,6 +32,7 @@ let log;
  */
 exports.handler = async (event, ctx, cb, setDeps = setDependencies) => {
 	log = new Log(event, ctx);
+	secretId = event.Records[0].cf.request.headers.secretId;
 	log.info('init lambda', { event: event });
 	deps = setDeps(deps);
 	try {
@@ -244,14 +245,6 @@ function validateNonce(nonce, hash) {
 // fetchConfigFromSecretsManager pulls the specified configuration from SecretsManager
 async function fetchConfigFromSecretsManager() {
 	// Get Secrets Manager Config Key from File since we cannot use environment variables.
-	if (secretId == undefined) {
-		try {
-			secretId = fs.readFileSync('./secret_name.txt', 'utf-8');
-			secretId = secretId.replace(/(\r\n|\n|\r)/gm, '');
-		} catch (err) {
-			log.error(err);
-		}
-	} // Attempted to read from CloudFront Custom Header due to Environment variable limitations // Must be an Origin Request, but we need this to be a Viewer Request.
 	const secret = await deps.sm.getSecretValue({ SecretId: secretId }).promise(); // eslint-disable-next-line no-buffer-constructor
 	const buff = Buffer.from(JSON.parse(secret.SecretString).config, 'base64');
 	const decodedval = JSON.parse(buff.toString('utf-8'));
