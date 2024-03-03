@@ -44,7 +44,10 @@ Before setting up the project let's go through the project folder structure and 
 - Run `npx projen` to update project config files
 - Commit and push the changes to your repository
 - Update your local `~/.aws/credentials` file with the CICD/DEV/PRD accounts credentials. You can get the temporary credentials form the idently center SSO login screen. Expand the CICD/DEV/PRD accounts and select `Command line or programmatic access` then copy the `Short-term credentials` into `~/.aws/credentials` and name the profiles cicd/dev/prd.
-- Bootstrap your environments by using `./src/infra/script/bootstrap.sh` script
+- Bootstrap your environments by using `./src/infra/scripts/bootstrap.sh` script
+- If you are using new accounts for this solution you need to use [AWS Service Quotas](https://us-east-1.console.aws.amazon.com/servicequotas/home?region=us-east-1#
+) to submit a request to increase the `Concurrently running builds for Linux/Small environment` to 10 in CICD/DEV/PRD accounts.
+- Create [GitHub Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 
 
 ### Provision github webhook stack
@@ -55,7 +58,6 @@ The stack contains an api gateway (the webhook URL) backed by a lambda function 
 ```sh
 cdk deploy GithubWebhookAPIStack --profile cicd -c TargetStack=GithubWebhookAPIStack
 ```
-
 After the stack gets deployed navigate to the stack output and copy `secretuuid` and `webhookurl` values.
 
 Go to your github repository and configure the webhook. Under `Setting/Webhook` click add  webhook.
@@ -66,8 +68,10 @@ Go to your github repository and configure the webhook. Under `Setting/Webhook` 
 - then click `Add webhook`
 to check the webhook is working correctly go to the `Recent Deliveries` tab you should see a successful `ping` message.
 
+!!for SaaS provisioning the Pipeline should be done first
+### !!for SaaS provisioning: Provision cross-account stacks in DEV/PRD accounts
 ### Provision CloudFront auth secret in DEV/PRD
-This stack creates a secret which will be used to keep Google auth configuration. You need to deploy this stack in DEV/PRD accounts
+This stack creates resources required by the application pipeline in the CICD account.
 
 From the root of repository execute this command
 
@@ -75,6 +79,7 @@ From the root of repository execute this command
 cdk deploy CrossAccountResources --profile dev -c TargetStack=CrossAccountResources
 cdk deploy CrossAccountResources --profile prd -c TargetStack=CrossAccountResources
 ```
+After the two stacks provision successfullly, go to the DEV/PRD accounts and update `github-token` secret with your GitHub Personal Access Token created earlier.
 
 ### Provision database pipeline (optional)
 From the root of repository execute this command
@@ -84,12 +89,13 @@ cdk deploy DBPipeline --profile cicd -c TargetStack=DBPipeline
 ```
 
 ### Provision application pipeline
-As discussed earlier the application pipeline consists of two separate pipelines created in one CloudFormation stack. `pipeline-prd` is dedicated for production deployment and `pipeline-cicd` is a template pipeline used to create a new pipeline for each feature branch.
+As discussed earlier the application pipeline consists of two separate pipelines created in one CloudFormation stack. `Pipeline-production` is dedicated for production deployment and `Pipeline-template` is a template pipeline used to create a new pipeline for each feature branch.
 
 From the root of repository execute this command
 
 ```sh
 cdk deploy Pipeline --profile cicd -c TargetStack=Pipeline
+!!for Saas add -c BranchName=main
 ```
 After the pipeline stack is provisioned go to [CodePipeline](https://us-east-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1) you should see two pipelines `pipeline-cicd` which should be failing and this is expected because it is only used as a template. The other pipeline `pipeline-prd` which is monitoring the `main` branch should be running. Wait for the pipeline to reach the approval gate then approve it. Once the pipeline is done, switch to production account and go to CloudFormation you should find a new stack `AppStage-AppStack` created. In the stack output you will find `CfnOutCloudFrontUrl` which holds the application url.
 
@@ -133,7 +139,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.pem;echo
     "AUTHZ": "GOOGLE"
 }
 ```
-- Encode the config above to Base64 format with an online tool. Go to AWS Secrets Manager then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
+- Encode the config above to Base64 format with an online tool. Go to the `CrossAccountResources` stack in DEV/PRD, get the auth secret ARN from the output `CloudfrontAuthSecretArn` then update the secret with the base64 encoded configuration. Note the secret should be a json object in this format
 ```json
 { "config": "base64EcodedConfig" }
 
@@ -170,8 +176,8 @@ Simply delete all CloudFormation stacks in CICD/DEV/PRD accounts.
 
 ## Known issue
 
-If you are using a new CICD account for this solution you might find the application pipeline is failing due to codeBuild limited run concurrency. You can get around this issue by retrying the failed steps. But it is recommended to use [AWS Service Quotas](https://us-east-1.console.aws.amazon.com/servicequotas/home?region=us-east-1#
-) to submit a request to increase the `Concurrently running builds for Linux/Small environment` to 10.
+If you are using new accounts for this solution you might find the application pipeline is failing due to codeBuild limited run concurrency. You can get around this issue by retrying the failed steps. But it is recommended to use [AWS Service Quotas](https://us-east-1.console.aws.amazon.com/servicequotas/home?region=us-east-1#
+) to submit a request to increase the `Concurrently running builds for Linux/Small environment` to 10 in CICD/DEV/PRD accounts.
 
 ## References
 - The multi branch pipeline was inspired by @wolfgangunger work [here](https://github.com/wolfgangunger/cdk-codepipeline-multibranch).
