@@ -1,5 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export class NextjsAppStack extends cdk.Stack {
@@ -25,6 +27,16 @@ export class NextjsAppStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
+    const cloudfrontAuthRole = new iam.Role(this, 'CloudfrontAuthRole', {
+      assumedBy: new iam.CompositePrincipal(new iam.ServicePrincipal('lambda.amazonaws.com'), new iam.ServicePrincipal('edgelambda.amazonaws.com'))
+    });
+
+    new lambdaNodeJs.NodejsFunction(this, 'CloudfrontAuthFunction', {
+      entry: require.resolve('../lambda/app/auth'),
+      role: cloudfrontAuthRole,
+      timeout: cdk.Duration.seconds(5)
     });
 
   }
