@@ -59,7 +59,7 @@ if (targetStack == 'DBPipeline') {
 if (targetStack == 'GithubWebhookAPI') {
   const stack = new cdk.Stack(app, 'GithubWebhookAPI', { env });
   new GithubWebhookAPI(stack, 'GithubWebhookAPI', {
-    buildSpecPath: 'src/scripts/buildspec.yaml',
+    buildSpecPath: 'src/infra/scripts/buildspec.yaml',
     githubOrg: config.githubOrg,
     githubRepo: config.githubRepo
   });
