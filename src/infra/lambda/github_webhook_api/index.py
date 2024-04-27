@@ -8,7 +8,6 @@ import boto3
 import uuid
 
 branch_prefix = os.getenv("branchPrefix")
-active_env_key = os.getenv("activeEnvKey")
 github_secret = os.getenv("githubSecretUUIDValue")
 codebuild_project_name = os.getenv("codeBuildProjectName")
 pipeline_stack_name = os.getenv("pipelineStackName")

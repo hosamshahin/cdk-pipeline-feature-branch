@@ -22,7 +22,6 @@ const targetStack = app.node.tryGetContext('TargetStack');
 
 if (targetStack == 'Pipeline') {
   const stack = new cdk.Stack(app, `pipeline-${branchName}`, { env });
-
   const appStage = new AppStage(stack, `stage-${branchName}`, { env });
 
   new Pipeline(stack, branchName, {

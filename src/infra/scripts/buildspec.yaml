@@ -15,5 +15,5 @@ phases:
       - npm -g install aws-cdk@2.96.2
       - npx cdk --version
       - cd $CODEBUILD_SRC_DIR && npm install projen
-      - cd $CODEBUILD_SRC_DIR src/client && npm install && npm run build
-      - cd $CODEBUILD_SRC_DIR && cdk deploy pipeline-$BRANCH_NAME -c ActiveEnvKey=ci -c TargetStack=Pipeline -c BranchName=$BRANCH_NAME
+      # - cd $CODEBUILD_SRC_DIR src/client && npm install && npm run build
+      - cd $CODEBUILD_SRC_DIR && cdk deploy pipeline-$BRANCH_NAME -c TargetStack=Pipeline -c BranchName=$BRANCH_NAME
