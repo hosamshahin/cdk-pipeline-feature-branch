@@ -27,15 +27,7 @@ test('Pipeline cdk-nag AwsSolutions Pack', () => {
     preApprovalRequired: true,
   });
 
-  // new Pipeline(stack, 'cicd', {
-  //   deploymentEnv: 'cicd',
-  //   deploymentAcct: 'DEV_ACCOUNT_ID',
-  //   region: config['region'],
-  //   githubOrg: config['githubOrg'],
-  //   githubRepo: config['githubRepo'],
-  //   githubBranch: 'not_exist_branch_to_avoid_running',
-  //   preApprovalRequired: false,
-  // });
+
 
 
   cdk.Aspects.of(stack).add(new AwsSolutionsChecks());
