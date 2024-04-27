@@ -10,9 +10,7 @@ phases:
   build:
     commands:
       - echo $BRANCH_NAME
-      - npm install -g npm@8.19.4
-      - npm -g uninstall aws-cdk
-      - npm -g install aws-cdk@2.96.2
+      - npm install -g aws-cdk
       - npx cdk --version
       - cd $CODEBUILD_SRC_DIR && npm install projen
       # - cd $CODEBUILD_SRC_DIR src/client && npm install && npm run build
